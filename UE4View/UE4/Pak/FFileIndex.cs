@@ -1,0 +1,47 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+
+namespace UE4View.UE4.Pak
+{
+    public class FFileIndex
+    {
+        public FFileIndex Add(string Dir, FPakEntry Entry)
+        {
+            var paths = Dir.Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
+            if (paths.Length > 1)
+            {
+                if (!Directories.ContainsKey(paths[0]))
+                    Directories.Add(paths[0], new FFileIndex());
+
+                Directories[paths[0]].Add(Path.Combine(paths.Skip(1).ToArray()), Entry);
+            }
+            else
+                Files.Add(Dir, Entry);
+            return this;
+        }
+
+        public FPakEntry Find(string Name)
+        {
+            foreach(var file in Files)
+            {
+                if (file.Key.Contains(Name))
+                    return file.Value;
+            }
+
+            foreach (var dir in Directories)
+            {
+                var item = dir.Value.Find(Name);
+                if (item != null)
+                    return item;
+            }
+
+            return null;
+        }
+
+        public SortedDictionary<string, FFileIndex> Directories = new SortedDictionary<string, FFileIndex>();
+
+        public SortedDictionary<string, FPakEntry> Files = new SortedDictionary<string, FPakEntry>();
+    }
+}

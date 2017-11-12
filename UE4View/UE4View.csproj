@@ -1,0 +1,95 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{59960912-35AE-4370-B8E4-F3ADD93D4DD0}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>UE4View</RootNamespace>
+    <AssemblyName>UE4View</AssemblyName>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="FarNet, Version=5.2.7.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\FarNet.5.2.8\tools\FarHome\FarNet\FarNet.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.10.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="UE4\FPropertyTag.cs" />
+    <Compile Include="UE4\UAsset\ExportTypes.cs" />
+    <Compile Include="UE4\UAsset\Export\UDataTable.cs" />
+    <Compile Include="UE4\VorbisBank\BankExplorer.cs" />
+    <Compile Include="UE4\VorbisBank\BankFile.cs" />
+    <Compile Include="UE4\VorbisBank\Xml\SoundBank.cs" />
+    <Compile Include="UE4\VorbisBank\Xml\SoundBankInfo.cs" />
+    <Compile Include="UE4\VorbisBank\Xml\SoundFile.cs" />
+    <Compile Include="UE4\Pak\PakExplorer.cs" />
+    <Compile Include="UE4ViewCommand.cs" />
+    <Compile Include="UE4\Pak\FFileIndex.cs" />
+    <Compile Include="UE4\Pak\FPakEntry.cs" />
+    <Compile Include="UE4\Pak\FPakFile.cs" />
+    <Compile Include="UE4\Pak\FPakInfo.cs" />
+    <Compile Include="UE4\LinkerData\FEngineVersion.cs" />
+    <Compile Include="UE4\LinkerData\FGatherableTextData.cs" />
+    <Compile Include="UE4\LinkerData\FGenerationInfo.cs" />
+    <Compile Include="UE4\LinkerData\FLocMetadataObject.cs" />
+    <Compile Include="UE4\LinkerData\FLocMetadataValue.cs" />
+    <Compile Include="UE4\LinkerData\FNameEntrySerialized.cs" />
+    <Compile Include="UE4\LinkerData\FObjectExport.cs" />
+    <Compile Include="UE4\LinkerData\FObjectImport.cs" />
+    <Compile Include="UE4\LinkerData\FPackageFileSummary.cs" />
+    <Compile Include="UE4\LinkerData\FTextSourceData.cs" />
+    <Compile Include="UE4\LinkerData\FTextSourceSiteContext.cs" />
+    <Compile Include="UE4\ObjectVersion.cs" />
+    <Compile Include="UE4\UAsset\UAsset.cs" />
+    <Compile Include="UE4\FArchive.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UE4\USerializable.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PostBuildEvent>copy "$(TargetPath)" /B "D:/Programs/Far Manager/FarNet/Modules/UE4View/UE4View.dll" /B</PostBuildEvent>
+  </PropertyGroup>
+</Project>
