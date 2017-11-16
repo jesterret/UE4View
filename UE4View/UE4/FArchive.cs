@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -86,14 +87,14 @@ namespace UE4View.UE4
             offset += ArraySize;
             return data;
         }
-        public T[] ToArray<T>() where T : USerializable
+        public List<T> ToArray<T>() where T : USerializable, new()
         {
             var len = ToInt32();
             if (len > 0)
             {
-                var items = new T[len];
+                var items = new List<T>(len);
                 foreach (var i in Enumerable.Range(0, len))
-                    items[i].Serialize(this);
+                    items.Add(ToObject<T>());
 
                 return items;
             }

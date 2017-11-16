@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Collections.Generic;
+using System.Text;
 
 namespace UE4View.UE4
 {
@@ -6,7 +7,7 @@ namespace UE4View.UE4
     {
         public string NamespaceName;
         public FTextSourceData SourceData = new FTextSourceData();
-        public FTextSourceSiteContext[] SourceSiteContexts;
+        public List<FTextSourceSiteContext> SourceSiteContexts;
 
         public override FArchive Serialize(FArchive reader)
         {

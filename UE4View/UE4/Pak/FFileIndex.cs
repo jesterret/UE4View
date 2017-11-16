@@ -22,24 +22,6 @@ namespace UE4View.UE4.Pak
             return this;
         }
 
-        public FPakEntry Find(string Name)
-        {
-            foreach(var file in Files)
-            {
-                if (file.Key.Contains(Name))
-                    return file.Value;
-            }
-
-            foreach (var dir in Directories)
-            {
-                var item = dir.Value.Find(Name);
-                if (item != null)
-                    return item;
-            }
-
-            return null;
-        }
-
         public SortedDictionary<string, FFileIndex> Directories = new SortedDictionary<string, FFileIndex>();
 
         public SortedDictionary<string, FPakEntry> Files = new SortedDictionary<string, FPakEntry>();

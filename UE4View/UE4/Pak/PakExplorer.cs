@@ -41,6 +41,16 @@ namespace UE4View
             CanExploreLocation = true;
         }
 
+
+        public override Explorer ExploreRoot(ExploreRootEventArgs args)
+        {
+            var exp = this.Parent as PakExplorer;
+            while(exp != null && exp.Parent is PakExplorer Parent)
+                exp = Parent;
+
+            return exp;
+        }
+
         public override void GetContent(GetContentEventArgs args)
         {
             var filedata = args.File.Data ?? GetFileData(args.File);
@@ -80,7 +90,7 @@ namespace UE4View
         public override Explorer ExploreLocation(ExploreLocationEventArgs args)
         {
             var dirs = args.Location.Replace(this.Location, string.Empty).Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
-            PakExplorer exp = this;
+            var exp = this;
             foreach(var dir in dirs)
             {
                 var file = exp._files.Where(f => f.IsDirectory && f.Name == dir).SingleOrDefault();
@@ -184,13 +194,14 @@ namespace UE4View
 
         private int GetCookedAssetVersion()
         {
-            // TODO: Fix absolute name containing game name
-            var FileContent = Encoding.UTF8.GetString(InspectedFile.ReadEntryByAbsoluteName("DeadByDaylight/CookedIniVersion.txt"))
-                                    .Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-            var verline = FileContent.Where(line => line.Contains("VersionedIniParams=PackageFileVersions")).SingleOrDefault();
-            if(verline != null)
-                return int.Parse(verline.Split(':')[1]);
-
+            var entry = InspectedFile.ReadEntryByName("*/CookedIniVersion.txt");
+            if (entry != null)
+            {
+                var content = Encoding.UTF8.GetString(entry).Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                var line = content.Where(str => str.Contains("VersionedIniParams=PackageFileVersions")).SingleOrDefault();
+                if (line != null)
+                    return int.Parse(line.Split(':')[1]);
+            }
             return 0;
         }
 

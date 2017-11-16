@@ -2,18 +2,31 @@
 
 namespace UE4View.UE4.Pak
 {
-    public class FPakEntry
+    public class FPakEntry : USerializable
     {
-        internal class FPakCompressedBlock
+        public enum ECompressionFlags
         {
-            long CompressionStart;
-            long CompressionEnd;
+            /** No compression																*/
+            COMPRESS_None = 0x00,
+            /** Compress with ZLIB															*/
+            COMPRESS_ZLIB = 0x01,
+            /** Compress with GZIP															*/
+            COMPRESS_GZIP = 0x02,
+            /** Prefer compression that compresses smaller (ONLY VALID FOR COMPRESSION)		*/
+            COMPRESS_BiasMemory = 0x10,
+            /** Prefer compression that compresses faster (ONLY VALID FOR COMPRESSION)		*/
+            COMPRESS_BiasSpeed = 0x20,
+        };
+        public class FPakCompressedBlock : USerializable
+        {
+            public long CompressionStart;
+            public long CompressionEnd;
 
-            public FPakCompressedBlock(byte[] bytes)
+            public override FArchive Serialize(FArchive reader)
             {
-                var x = new FArchive(bytes);
-                CompressionStart = x.ToInt64();
-                CompressionEnd = x.ToInt64();
+                CompressionStart = reader.ToInt64();
+                CompressionEnd = reader.ToInt64();
+                return reader;
             }
         }
         /** Offset into pak file where the file is stored.*/
@@ -23,61 +36,55 @@ namespace UE4View.UE4.Pak
         /** Uncompressed file size. */
         public long UncompressedSize;
         /** Compression method. */
-        int CompressionMethod;
+        public ECompressionFlags CompressionMethod;
         /** File SHA1 value. */
         byte[] Hash = new byte[20];
         /** Array of compression blocks that describe how to decompress this pak entry. */
-        List<FPakCompressedBlock> CompressionBlocks;
+        public List<FPakCompressedBlock> CompressionBlocks;
         /** Size of a compressed block in the file. */
-        uint CompressionBlockSize;
+        public uint CompressionBlockSize;
         /** True is file is encrypted. */
         public byte bEncrypted;
 
-        public FPakEntry(byte[] bytes, int Version)
-        {
-            if (bytes != null && bytes.Length != GetSerializedSize(Version))
-            {
-                Offset = 0;
-                Size = 0;
-                return;
-            }
-
-            var reader = new FArchive(bytes);
-            Offset = reader.ToInt64();
-            Size = reader.ToInt64();
-            UncompressedSize = reader.ToInt64();
-            CompressionMethod = reader.ToInt32();
-            if(Version <= (int)FPakInfo.PakVersion.Initial)
-            {
-                reader.ToInt64();
-            }
-            reader.ToByteArray(20).CopyTo(Hash, 0);
-            if(Version >= (int)FPakInfo.PakVersion.CompressionEncryption)
-            {
-                if (CompressionMethod != 0)
-                {
-                    CompressionBlocks = new List<FPakCompressedBlock>(reader.ToInt32());
-                    for (int i = 0; i < CompressionBlocks.Capacity; i++)
-                        CompressionBlocks.Add(new FPakCompressedBlock(reader.ToByteArray(sizeof(long) * 2)));
-                }
-                bEncrypted = reader.ToByte();
-                CompressionBlockSize = reader.ToUInt32();
-            }
-            return;
-        }
-
-        public static long GetSerializedSize(int Version)
+        public long GetSerializedSize(int version)
         {
             long SerializedSize = sizeof(long) + sizeof(long) + sizeof(long) + sizeof(int) + 20;
-            if(Version >= (int)FPakInfo.PakVersion.CompressionEncryption)
+            if(version >= (int)FPakInfo.PakVersion.CompressionEncryption)
             {
                 SerializedSize += sizeof(byte) + sizeof(uint);
+                if(CompressionMethod != ECompressionFlags.COMPRESS_None)
+                {
+                    // Size += sizeof(FPakCompressedBlock) * BlockCount + ArrayProperty -> Count
+                    SerializedSize += (sizeof(long) * 2) * CompressionBlocks.Count + sizeof(int);
+                }
             }
-            if(Version < (int)FPakInfo.PakVersion.NoTimestamps)
+            if(version < (int)FPakInfo.PakVersion.NoTimestamps)
             {
                 SerializedSize += sizeof(long);
             }
             return SerializedSize;
+        }
+
+        public override FArchive Serialize(FArchive reader)
+        {
+            Offset = reader.ToInt64() + GetSerializedSize(reader.Version); // Offset + PakHeader -> OffsetInPak
+            Size = reader.ToInt64();
+            UncompressedSize = reader.ToInt64();
+            CompressionMethod = (ECompressionFlags)reader.ToInt32();
+            if (reader.Version <= (int)FPakInfo.PakVersion.Initial)
+            {
+                reader.ToInt64(); // FDateTime Timestamp
+            }
+            reader.ToByteArray(20).CopyTo(Hash, 0);
+            if (reader.Version >= (int)FPakInfo.PakVersion.CompressionEncryption)
+            {
+                if (CompressionMethod != ECompressionFlags.COMPRESS_None)
+                    CompressionBlocks = reader.ToArray<FPakCompressedBlock>();
+
+                bEncrypted = reader.ToByte();
+                CompressionBlockSize = reader.ToUInt32();
+            }
+            return reader;
         }
     }
 }
