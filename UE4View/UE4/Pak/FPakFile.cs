@@ -105,7 +105,7 @@ namespace UE4View.UE4.Pak
                         // TODO: Test if GZip decompresses fine.
                         else if (entry.CompressionMethod == FPakEntry.ECompressionFlags.COMPRESS_GZIP)
                         {
-                            using (var compressed = new MemoryStream(data)) // skip 2 bytes for zlib specification
+                            using (var compressed = new MemoryStream(data))
                             {
                                 using (var decstream = new System.IO.Compression.GZipStream(compressed, System.IO.Compression.CompressionMode.Decompress))
                                 {

@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace UE4View.UE4
 {
-    class FPropertyTag : USerializable
+    public class FPropertyTag : USerializable
     {
         public string Name;        // Name of property
         public string Type;        // Type of property
@@ -19,6 +22,36 @@ namespace UE4View.UE4
         public Guid PropertyGuid;
 
         public int PropertyStartOffset;
+
+        public static void WriteAll(FArchive source, TextWriter destination)
+        {
+            foreach (var prop in ReadToEnd(source))
+            {
+                destination.Write("{0}: ", prop.Name);
+                var PropValue = prop.ToProperty(source);
+                if (PropValue is List<object> array)
+                {
+                    destination.Write("[ ");
+                    foreach (var i in Enumerable.Range(0, array.Count))
+                    {
+                        destination.Write(array[i]);
+                        if (i < array.Count - 1)
+                            destination.Write(", ");
+                    }
+                    destination.WriteLine(" ]");
+                }
+                else
+                    destination.WriteLine(PropValue);
+            }
+        }
+        public static IEnumerable<FPropertyTag> ReadToEnd(FArchive reader)
+        {
+            FPropertyTag tag = null;
+            while((tag = reader.ToObject<FPropertyTag>()).Name != "None")
+            {
+                yield return tag;
+            }
+        }
 
         public override FArchive Serialize(FArchive reader)
         {
@@ -81,5 +114,32 @@ namespace UE4View.UE4
 
             return reader;
         }
+        public object ToProperty(FArchive reader)
+        {
+            if (!string.IsNullOrEmpty(Type))
+            {
+                if (Types.Where(t => t.Key.StartsWith(Type)).Select(t => t.Value).FirstOrDefault() is Type type)
+                {
+                    if (type.ContainsGenericParameters)
+                    {
+                        var t = type.MakeGenericType(Types[InnerType]);
+                        dynamic prop = Activator.CreateInstance(t);
+                        prop.Serialize(reader, this);
+                        return prop.Value;
+                    }
+                    else
+                    {
+                        dynamic prop = Activator.CreateInstance(type);
+                        prop.Serialize(reader, this);
+                        return prop.Value;
+                    }
+                }
+                else
+                    throw new ArgumentException($"Unknown type \"{Type}\", implement handling for that shit.");
+            }
+            return null;
+        }
+
+        private static Dictionary<string, Type> Types { get; } = typeof(PropertyTypes.UPropertyBase).Assembly.GetTypes().Where(t => !t.IsAbstract && t.IsSubclassOf(typeof(PropertyTypes.UPropertyBase))).ToDictionary(t => t.Name);
     }
 }

@@ -37,43 +37,6 @@ namespace UE4View
             }
             else if (filename.EndsWith(".uasset"))
             {
-                //var viewer = Far.Api.CreateViewer();
-                //viewer.DeleteSource = DeleteSource.File;
-                //viewer.DisableHistory = true;
-                //viewer.FileName = Path.GetTempFileName();
-                //viewer.Switching = Switching.Disabled;
-                //viewer.Title = filename;
-                //viewer.ViewMode = ViewerViewMode.Text;
-                //viewer.WordWrapMode = true;
-                // TODO: Write data to viewer.FileName
-                //viewer.Open(OpenMode.Modal);
-                if (false)
-                {
-                    var files = Directory.GetFiles(Far.Api.CurrentDirectory, "*.uasset", SearchOption.AllDirectories);
-                    foreach(var file in files)
-                    {
-                        bool bDelete = false;
-                        using (var stream = File.CreateText(file + ".log"))
-                        {
-                            try
-                            {
-                                new UAsset(File.ReadAllBytes(file), 506);
-                            }
-                            catch
-                            {
-                                bDelete = true;
-                            }
-                            finally
-                            {
-                                File.Delete(file);
-                            }
-                        }
-                        if (bDelete)
-                            File.Delete(file + ".log");
-                    }
-                }
-                else
-                    new UAsset(File.ReadAllBytes(filename), GetCookedAssetVersion());
             }
         }
     }

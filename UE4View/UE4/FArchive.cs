@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -20,14 +21,16 @@ namespace UE4View.UE4
         }
         public string ToFString()
         {
+            string Str = string.Empty;
+
             var len = ToInt32();
-            if (len != 0)
-            {
-                var str = Encoding.UTF8.GetString(Buffer, offset, len - 1);
-                offset += len;
-                return str;
-            }
-            return string.Empty;
+            // Negative length denotes UTF16
+            if (len < 0)
+                Str = ToFString(Encoding.Unicode, -len * 2);
+            else
+                Str = ToFString(Encoding.UTF8, len);
+
+            return Str;
         }
         public string ToFString(Encoding enc, int? Length = null)
         {
@@ -42,10 +45,78 @@ namespace UE4View.UE4
         }
         public string ToFText()
         {
-            ToByteArray(0x9);
-            var LocalizationGuid = ToFString();
-            var result = ToFString();
-            return result;
+            string SourceString = string.Empty;
+            var Flags = ToUInt32();
+            if (Version < (int)ObjectVersion.EUnrealEngineObjectUE4Version.VER_UE4_FTEXT_HISTORY)
+            {
+                var str = ToFString();
+                if (Version >= (int)ObjectVersion.EUnrealEngineObjectUE4Version.VER_UE4_ADDED_NAMESPACE_AND_KEY_DATA_TO_FTEXT)
+                {
+                    var Namespace = ToFString();
+                    var Key = ToFString();
+                }
+                return str;
+            }
+
+            if (Version >= (int)ObjectVersion.EUnrealEngineObjectUE4Version.VER_UE4_FTEXT_HISTORY)
+            {
+                var HistoryType = ToByte();
+                bool bSerializeHistory = true;
+                switch (HistoryType)
+                {
+                    case 0: // case ETextHistoryType::Base:
+
+                        var Namespace = ToFString();
+                        var Key = ToFString();
+                        SourceString = ToFString();
+                        break;
+                    case 1: // case ETextHistoryType::NamedFormat:
+                        Debugger.Break();
+                        var FormatText = ToFText();
+
+                        break;
+                    case 2: // case ETextHistoryType::OrderedFormat:
+                        Debugger.Break();
+                        break;
+                    case 3: // case ETextHistoryType::ArgumentFormat:
+                        Debugger.Break();
+                        break;
+                    case 4: // case ETextHistoryType::AsNumber:
+                        Debugger.Break();
+                        break;
+                    case 5: // case ETextHistoryType::AsPercent:
+                        Debugger.Break();
+                        break;
+                    case 6: // case ETextHistoryType::AsCurrency:
+                        Debugger.Break();
+                        break;
+                    case 7: // case ETextHistoryType::AsDate:
+                        Debugger.Break();
+                        break;
+                    case 8: // case ETextHistoryType::AsTime:
+                        Debugger.Break();
+                        break;
+                    case 9: // case ETextHistoryType::AsDateTime:
+                        Debugger.Break();
+                        break;
+                    case 10: // case ETextHistoryType::Transform:
+                        Debugger.Break();
+                        break;
+                    case 11: // case ETextHistoryType::StringTableEntry:
+                        Debugger.Break();
+                        break;
+
+                    default:
+                        bSerializeHistory = false;
+                        break;
+                }
+
+                if (bSerializeHistory)
+                {
+                    // HistoryType object -> serialize
+                }
+            }
+            return SourceString;
 
             //if (Version < (int)ObjectVersion.EUnrealEngineObjectUE4Version.VER_UE4_FTEXT_HISTORY)
             //{
@@ -57,7 +128,6 @@ namespace UE4View.UE4
             //    }
             //    return str;
             //}
-            //var Flags = ToUInt32();
 
             //if (Version >= (int)ObjectVersion.EUnrealEngineObjectUE4Version.VER_UE4_FTEXT_HISTORY)
             //{

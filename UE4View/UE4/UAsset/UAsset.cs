@@ -56,7 +56,7 @@ namespace UE4View.UE4.UAsset
                 StringAssetReferences.Add(ToFString());
             }
             
-            // TODO: Fixup import, fixup exports, match exports with exporter object
+            // TODO: Fixup imports & exports from indexes to names, match exports with exporter object
         }
 
         public UAsset(byte[] data) : this(data, 0)
