@@ -7,13 +7,15 @@ using System.Threading.Tasks;
 
 namespace UE4View.UE4.PropertyTypes
 {
-    class ObjectProperty : UProperty<int>
+    class ObjectProperty : UProperty
     {
         public override FArchive Serialize(FArchive reader, FPropertyTag tag = null)
         {
-            Value = reader.ToInt32();
-            if (Value > 0)
-                Debugger.Break();
+            var index = reader.ToInt32();
+            if (reader is UAsset.UAsset asset)
+                Value = asset.ImpExp(index);
+            else
+                Value = index;
 
             return reader;
         }

@@ -65,10 +65,25 @@ namespace UE4View.UE4
                 switch (HistoryType)
                 {
                     case 0: // case ETextHistoryType::Base:
-
-                        var Namespace = ToFString();
-                        var Key = ToFString();
-                        SourceString = ToFString();
+                        if (Localization.LocalizationManager.NamespaceTable.Count > 0)
+                        {
+                            var Namespace = ToFString();
+                            if (Localization.LocalizationManager.NamespaceTable.TryGetValue(Namespace, out var KeyTable))
+                            {
+                                var Key = ToFString();
+                                SourceString = ToFString();
+                                if (KeyTable.TryGetValue(Key, out var LocString))
+                                {
+                                    SourceString = LocString[0].LocalizedString;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            var Namespace = ToFString();
+                            var Key = ToFString();
+                            SourceString = ToFString();
+                        }
                         break;
                     case 1: // case ETextHistoryType::NamedFormat:
                         Debugger.Break();

@@ -29,7 +29,7 @@ namespace UE4View.UE4
             {
                 destination.Write("{0}: ", prop.Name);
                 var PropValue = prop.ToProperty(source);
-                if (PropValue is List<object> array)
+                if (PropValue is PropertyTypes.ArrayPropertyBase array)
                 {
                     destination.Write("[ ");
                     foreach (var i in Enumerable.Range(0, array.Count))
@@ -118,20 +118,20 @@ namespace UE4View.UE4
         {
             if (!string.IsNullOrEmpty(Type))
             {
-                if (Types.Where(t => t.Key.StartsWith(Type)).Select(t => t.Value).FirstOrDefault() is Type type)
+                if (PropertyTypes.Where(t => t.Key.StartsWith(Type)).Select(t => t.Value).SingleOrDefault() is Type type)
                 {
                     if (type.ContainsGenericParameters)
                     {
-                        var t = type.MakeGenericType(Types[InnerType]);
+                        var t = type.MakeGenericType(PropertyTypes[InnerType]);
                         dynamic prop = Activator.CreateInstance(t);
                         prop.Serialize(reader, this);
-                        return prop.Value;
+                        return prop;
                     }
                     else
                     {
                         dynamic prop = Activator.CreateInstance(type);
                         prop.Serialize(reader, this);
-                        return prop.Value;
+                        return prop;
                     }
                 }
                 else
@@ -140,6 +140,6 @@ namespace UE4View.UE4
             return null;
         }
 
-        private static Dictionary<string, Type> Types { get; } = typeof(PropertyTypes.UPropertyBase).Assembly.GetTypes().Where(t => !t.IsAbstract && t.IsSubclassOf(typeof(PropertyTypes.UPropertyBase))).ToDictionary(t => t.Name);
+        private static Dictionary<string, Type> PropertyTypes { get; } = typeof(PropertyTypes.UProperty).Assembly.GetTypes().Where(t => !t.IsAbstract && t.IsSubclassOf(typeof(PropertyTypes.UProperty))).ToDictionary(t => t.Name);
     }
 }

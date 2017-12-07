@@ -2,12 +2,10 @@
 
 namespace UE4View.UE4
 {
-    public class FObjectExport : USerializable
+    public class FObjectExport : FObjectResource
     {
         public int ClassIndex;
         public int SuperIndex;
-        public int OuterIndex;
-        public string ObjectName;
         public int Save;
         public long SerialSize;
         public long SerialOffset;
@@ -70,6 +68,7 @@ namespace UE4View.UE4
                 SerializationBeforeCreateDependencies = reader.ToInt32();
                 CreateBeforeCreateDependencies = reader.ToInt32();
             }
+
             return reader;
         }
     }

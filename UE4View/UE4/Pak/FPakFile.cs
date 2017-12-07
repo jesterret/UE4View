@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Management.Automation;
 
 namespace UE4View.UE4.Pak
 {
@@ -143,33 +144,23 @@ namespace UE4View.UE4.Pak
         {
             if (parts.Length == 1)
             {
-                // final path element
-                if (parts[0] != "*")
-                {
-                    return dir.Files
-                        .Where(kv => kv.Key == parts[0])
-                        .Select(kv => kv.Value)
-                        .SingleOrDefault();
-                }
-                
-
-            }
-            else if (parts[0] == "*")
-            {
-                foreach (var kv in dir.Directories)
-                {
-                    var found = RecursiveSearch(parts.Skip(1).ToArray(), kv.Value);
-                    if (found != null)
-                        return found;
-                }
+                return dir.Files
+                    .Where(kv => new WildcardPattern(parts[0]).IsMatch(kv.Key))
+                    .Select(kv => kv.Value)
+                    .SingleOrDefault();
             }
             else
             {
-                var idx = dir.Directories
-                    .Where(kv => kv.Key == parts[0])
-                    .Select(kv => kv.Value)
-                    .SingleOrDefault();
-                return RecursiveSearch(parts.Skip(1).ToArray(), idx);
+                var dirs = dir.Directories
+                    .Where(kv => new WildcardPattern(parts[0]).IsMatch(kv.Key))
+                    .Select(kv => kv.Value);
+
+                foreach(var idx in dirs)
+                {
+                    var found = RecursiveSearch(parts.Skip(1).ToArray(), idx);
+                    if (found != null)
+                        return found;
+                }
             }
             return null;
         }

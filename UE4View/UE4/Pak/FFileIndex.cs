@@ -22,8 +22,8 @@ namespace UE4View.UE4.Pak
             return this;
         }
 
-        public SortedDictionary<string, FFileIndex> Directories = new SortedDictionary<string, FFileIndex>();
+        public SortedDictionary<string, FFileIndex> Directories { get; } = new SortedDictionary<string, FFileIndex>();
 
-        public SortedDictionary<string, FPakEntry> Files = new SortedDictionary<string, FPakEntry>();
+        public SortedDictionary<string, FPakEntry> Files { get; } = new SortedDictionary<string, FPakEntry>();
     }
 }

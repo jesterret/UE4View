@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace UE4View.UE4.PropertyTypes
 {
-    class BoolProperty : UProperty<bool>
+    class BoolProperty : UProperty
     {
         public override FArchive Serialize(FArchive reader, FPropertyTag tag = null)
         {

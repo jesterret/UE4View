@@ -23,6 +23,8 @@ namespace UE4View
         public PakExplorer(FPakFile Pak) : this(null, Pak.Index, Pak.OriginalFileName)
         {
             InspectedFile = Pak;
+            new UE4.Localization.LocalizationManager(Pak.ReadEntryByName("/*/Content/Localization/Game/en/*.locres"));
+            return;
         }
         PakExplorer(Explorer Parent, FFileIndex Index, string Loc) : this(Parent, Loc)
         {

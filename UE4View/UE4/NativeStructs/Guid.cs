@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace UE4View.UE4.PropertyTypes
+namespace UE4View.UE4.NativeStructs
 {
-    class StrProperty : UProperty
+    class Guid : UStruct
     {
         public override FArchive Serialize(FArchive reader, FPropertyTag tag = null)
         {
-            Value = reader.ToFString();
+            Value = reader.ToGuid();
             return reader;
         }
     }

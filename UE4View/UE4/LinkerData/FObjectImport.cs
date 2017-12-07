@@ -1,11 +1,9 @@
 ﻿namespace UE4View.UE4
 {
-    public class FObjectImport : USerializable
+    public class FObjectImport : FObjectResource
     {
         public string ClassPackage;
         public string ClassName;
-        public int OuterIndex;
-        public string ObjectName;
         public object XObject;
         public object SourceLinker;
         public int SourceIndex;

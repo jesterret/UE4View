@@ -1,8 +1,10 @@
-﻿using System;
+﻿using FarNet;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
-
+using System.Text;
 
 namespace UE4View.UE4.UAsset
 {
@@ -14,6 +16,14 @@ namespace UE4View.UE4.UAsset
         protected List<FObjectImport> ImportMap;
         List<FGatherableTextData> GatherableTextDataMap;
         List<string> StringAssetReferences;
+
+        public FObjectResource ImpExp(int Index)
+        {
+            if (Index >= 0)
+                return ExportMap[Index];
+            else
+                return ImportMap[-Index - 1];
+        }
 
         public UAsset(byte[] data, int version) : base(data)
         {
@@ -55,8 +65,62 @@ namespace UE4View.UE4.UAsset
             {
                 StringAssetReferences.Add(ToFString());
             }
-            
+
             // TODO: Fixup imports & exports from indexes to names, match exports with exporter object
+            foreach (var imp in ImportMap)
+            {
+                imp.XObject = string.Format("{0} {1}.{2}", imp.ClassName, ImpExp(imp.OuterIndex).ObjectName, imp.ObjectName);
+            }
+            //var ufunc = ExportMap.Where(exp => ImpExp(exp.ClassIndex).ObjectName == "Function").ToArray();
+            //foreach(var func in ufunc)
+            //{
+            //    Seek((int)func.SerialOffset);
+            //    var tags = FPropertyTag.ReadToEnd(this).ToArray();
+            //    if(tags.Length > 0)
+            //    {
+            //        Debugger.Break();
+            //    }
+            //    var FunctionFlags = ToUInt32();
+            //    if(Version >= (int)ObjectVersion.EUnrealEngineObjectUE4Version.VER_UE4_SERIALIZE_BLUEPRINT_EVENTGRAPH_FASTCALLS_IN_UFUNCTION)
+            //    {
+            //        var test = FPropertyTag.ReadToEnd(this).ToArray();
+            //        return;
+            //    }
+            //}
+
+            var Default = ExportMap.Where(exp => ImpExp(exp.ClassIndex).ObjectName.StartsWith("Default__")).FirstOrDefault();
+            if (Default != null)
+            {
+                Seek((int)Default.SerialOffset);
+                using (var wr = File.CreateText(Path.Combine(Far.Api.CurrentDirectory, Default.ObjectName + ".log")))
+                {
+                    try
+                    {
+                        FPropertyTag.WriteAll(this, wr);
+                    }
+                    catch
+                    {
+                        wr.Flush();
+                    }
+                }
+            }
+
+            foreach (var exp in ExportMap)
+            {
+                Seek((int)exp.SerialOffset);
+                Directory.CreateDirectory(Path.Combine(Far.Api.CurrentDirectory, "Asset"));
+                using (var wr = File.CreateText(Path.Combine(Far.Api.CurrentDirectory, "Asset", exp.ObjectName + ".log")))
+                {
+                    try
+                    {
+                        FPropertyTag.WriteAll(this, wr);
+                    }
+                    catch
+                    {
+                        wr.Flush();
+                    }
+                }
+            }
         }
 
         public UAsset(byte[] data) : this(data, 0)

@@ -11,7 +11,7 @@ namespace UE4View.UE4
 
         public override FArchive Serialize(FArchive reader)
         {
-            NamespaceName = reader.ToFString(Encoding.UTF8);
+            NamespaceName = reader.ToFString();
             SourceData.Serialize(reader);
             SourceSiteContexts = reader.ToArray<FTextSourceSiteContext>();
             return reader;

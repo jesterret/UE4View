@@ -37,6 +37,16 @@ namespace UE4View
             }
             else if (filename.EndsWith(".uasset"))
             {
+                //new UAsset(File.ReadAllBytes(filename), 506);
+                // check whether we can find a localisation in this directory
+                if(Directory.EnumerateFiles(Far.Api.CurrentDirectory, "*.locres").FirstOrDefault() is string found)
+                    new UE4.Localization.LocalizationManager(File.ReadAllBytes(found));
+
+                var data = new UE4.UAsset.Export.UDataTable(File.ReadAllBytes(filename), 506);
+                using (var file = File.CreateText(filename + ".log"))
+                {
+                    data.ReadRows(file);
+                }
             }
         }
     }
