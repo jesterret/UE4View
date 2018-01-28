@@ -6,13 +6,19 @@ using System.Text;
 
 namespace UE4View.UE4
 {
-    public class FArchive
+    public class FArchive : IDisposable
     {
         int offset;
-        byte[] Buffer;
-        public FArchive(byte[] Data)
+        byte[] buffer;
+
+        public static implicit operator FArchive(byte[] data)
         {
-            Buffer = Data;
+            return new FArchive(data);
+        }
+
+        public FArchive(byte[] data)
+        {
+            buffer = data;
             offset = 0;
         }
         public virtual string ToName()
@@ -37,7 +43,7 @@ namespace UE4View.UE4
             var len = Length != null ? Length.Value : ToInt32();
             if (len != 0)
             {
-                var str = enc.GetString(Buffer, offset, len - enc.GetByteCount(" "));
+                var str = enc.GetString(buffer, offset, len - enc.GetByteCount(" "));
                 offset += len;
                 return str;
             }
@@ -57,32 +63,22 @@ namespace UE4View.UE4
                 }
                 return str;
             }
-
-            if (Version >= (int)ObjectVersion.EUnrealEngineObjectUE4Version.VER_UE4_FTEXT_HISTORY)
+            else
             {
                 var HistoryType = ToByte();
-                bool bSerializeHistory = true;
                 switch (HistoryType)
                 {
                     case 0: // case ETextHistoryType::Base:
-                        if (Localization.LocalizationManager.NamespaceTable.Count > 0)
+
+                        var Namespace = ToFString();
+                        var Key = ToFString();
+                        SourceString = ToFString();
+                        if (Localization.LocalizationManager.NamespaceTable.Count > 0 && Localization.LocalizationManager.NamespaceTable.TryGetValue(Namespace, out var KeyTable))
                         {
-                            var Namespace = ToFString();
-                            if (Localization.LocalizationManager.NamespaceTable.TryGetValue(Namespace, out var KeyTable))
+                            if (KeyTable.TryGetValue(Key, out var Entry))
                             {
-                                var Key = ToFString();
-                                SourceString = ToFString();
-                                if (KeyTable.TryGetValue(Key, out var LocString))
-                                {
-                                    SourceString = LocString[0].LocalizedString;
-                                }
+                                SourceString = Entry.LocalizedString;
                             }
-                        }
-                        else
-                        {
-                            var Namespace = ToFString();
-                            var Key = ToFString();
-                            SourceString = ToFString();
                         }
                         break;
                     case 1: // case ETextHistoryType::NamedFormat:
@@ -122,53 +118,16 @@ namespace UE4View.UE4
                         break;
 
                     default:
-                        bSerializeHistory = false;
+                        Debugger.Break();
                         break;
-                }
-
-                if (bSerializeHistory)
-                {
-                    // HistoryType object -> serialize
                 }
             }
             return SourceString;
-
-            //if (Version < (int)ObjectVersion.EUnrealEngineObjectUE4Version.VER_UE4_FTEXT_HISTORY)
-            //{
-            //    var str = ToFString();
-            //    if (Version >= (int)ObjectVersion.EUnrealEngineObjectUE4Version.VER_UE4_ADDED_NAMESPACE_AND_KEY_DATA_TO_FTEXT)
-            //    {
-            //        var Namespace = ToFString();
-            //        var Key = ToFString();
-            //    }
-            //    return str;
-            //}
-
-            //if (Version >= (int)ObjectVersion.EUnrealEngineObjectUE4Version.VER_UE4_FTEXT_HISTORY)
-            //{
-            //    var HistoryType = ToByte();
-            //    bool bSerializeHistory = true;
-            //    if(HistoryType > 11) // FTextHistoryType determining
-            //    {
-            //        bSerializeHistory = false;
-            //    }
-
-            //    if(bSerializeHistory)
-            //    {
-            //        // HistoryType object -> serialize
-            //    }
-            //}
-
-            //// Value.Rebuild()
-
-            //// check localization?
-
-            //return string.Empty;
         }
         public byte[] ToByteArray(int ArraySize)
         {
             var data = new byte[ArraySize];
-            Array.Copy(Buffer, offset, data, 0, ArraySize);
+            Array.Copy(buffer, offset, data, 0, ArraySize);
             offset += ArraySize;
             return data;
         }
@@ -194,49 +153,49 @@ namespace UE4View.UE4
         public Guid ToGuid()
         {
             var data = new byte[16];
-            Array.Copy(Buffer, offset, data, 0, 16);
+            Array.Copy(buffer, offset, data, 0, 16);
             offset += 16;
             return new Guid(data);
         }
         public long ToInt64()
         {
-            var val = BitConverter.ToInt64(Buffer, offset);
+            var val = BitConverter.ToInt64(buffer, offset);
             offset += sizeof(long);
             return val;
         }
         public ulong ToUInt64()
         {
-            var val = BitConverter.ToUInt64(Buffer, offset);
+            var val = BitConverter.ToUInt64(buffer, offset);
             offset += sizeof(ulong);
             return val;
         }
         public int ToInt32()
         {
-            var val = BitConverter.ToInt32(Buffer, offset);
+            var val = BitConverter.ToInt32(buffer, offset);
             offset += sizeof(int);
             return val;
         }
         public uint ToUInt32()
         {
-            var val = BitConverter.ToUInt32(Buffer, offset);
+            var val = BitConverter.ToUInt32(buffer, offset);
             offset += sizeof(uint);
             return val;
         }
         public short ToInt16()
         {
-            var val = BitConverter.ToInt16(Buffer, offset);
+            var val = BitConverter.ToInt16(buffer, offset);
             offset += sizeof(short);
             return val;
         }
         public ushort ToUInt16()
         {
-            var val = BitConverter.ToUInt16(Buffer, offset);
+            var val = BitConverter.ToUInt16(buffer, offset);
             offset += sizeof(ushort);
             return val;
         }
         public byte ToByte()
         {
-            return Buffer[offset++];
+            return buffer[offset++];
         }
         public bool ToBoolean()
         {
@@ -244,17 +203,16 @@ namespace UE4View.UE4
         }
         public float ToFloat()
         {
-            var val = BitConverter.ToSingle(Buffer, offset);
+            var val = BitConverter.ToSingle(buffer, offset);
             offset += sizeof(float);
             return val;
         }
         public double ToDouble()
         {
-            var val = BitConverter.ToDouble(Buffer, offset);
+            var val = BitConverter.ToDouble(buffer, offset);
             offset += sizeof(double);
             return val;
         }
-
 
         public FArchive Skip(int len)
         {
@@ -272,9 +230,26 @@ namespace UE4View.UE4
         }
         public int Length()
         {
-            return Buffer.Length;
+            return buffer.Length;
         }
 
         public int Version { get; set; }
+
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                    buffer = null;
+
+                disposedValue = true;
+            }
+        }
+        
+        public void Dispose() => Dispose(true);
+        #endregion
     }
 }

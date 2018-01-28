@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Management.Automation;
+using System.Security.Cryptography;
 
 namespace UE4View.UE4.Pak
 {
@@ -10,21 +11,18 @@ namespace UE4View.UE4.Pak
     {
         public FPakFile(string FileName)
         {
+            FilePath = Path.GetDirectoryName(FileName);
             if (File.Exists(FileName))
             {
-                OriginalFileName = Path.GetFileName(FileName);
                 CreationTime = File.GetCreationTime(FileName);
                 AccessTime = File.GetLastAccessTime(FileName);
                 WriteTime = File.GetLastWriteTime(FileName);
+                OriginalFileName = Path.GetFileName(FileName);
+
                 stream = new FileStream(FileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+
                 if(stream != null)
-                {
-                    ReadPakInfo();
-                    if (Info.Magic == FPakInfo.PakFile_Magic && Info.bEncryptedIndex == false)
-                    {
-                        ReadPakIndex();
-                    }
-                }
+                    Initialize();
             }
         }
 
@@ -47,29 +45,64 @@ namespace UE4View.UE4.Pak
             return null;
         }
 
-        private void ReadPakInfo()
+        private void Initialize()
         {
             var InfoSize = FPakInfo.GetSerializedSize();
             var InfoData = ReadStreamData(-InfoSize, InfoSize);
-            stream.Seek(0, SeekOrigin.Begin);
-            Info = new FPakInfo(InfoData);
+            Info.Serialize(InfoData);
+
+            if (Info.Magic == FPakInfo.PakFile_Magic)
+                LoadIndex();
         }
-        private void ReadPakIndex()
+        private void LoadIndex()
         {
             var IndexData = ReadStreamData(Info.IndexOffset, Info.IndexSize);
-            var reader = new FArchive(IndexData);
-            reader.Version = Info.Version;
-            MountPoint = reader.ToFString();
-            int NumEntries = reader.ToInt32();
-            for (int i = 0; i < NumEntries; i++)
+            if (Info.bEncryptedIndex != 0)
             {
-                string FileName = reader.ToFString();
-                var entry = new FPakEntry();
-                entry.Serialize(reader);
-                AbsoluteIndex.Add(FileName, entry);
-                Index.Add(FileName, entry);
+                using (var DataStream = new MemoryStream(IndexData))
+                {
+                    using (var rijndael = new RijndaelManaged())
+                    {
+                        rijndael.Mode = CipherMode.ECB;
+                        rijndael.Padding = PaddingMode.Zeros;
+                        rijndael.IV = new byte[16];
+                        rijndael.BlockSize = 128;
+
+                        // TODO: This is a "Darwin Project" encryption key. Change this to a dictionary of encryption keys and match them with the specific games
+                        // rijndael.Key = System.Text.Encoding.UTF8.GetBytes("e3VqgSMhuaPw75fm0PdGZCN3ASwpVOk5Ij7iLf8VOEdqGL6aw05JeX0RHMgBvypd").Take(32).ToArray(); // Darwin
+                        rijndael.Key = System.Text.Encoding.UTF8.GetBytes("y298qjSb115NqQ3Agad30DWn2QYrTI8CT6aP05l2PBV9Qe92S94PdoVCCy06A38L").Take(32).ToArray(); // Fortnite
+
+                        using (var crypt = rijndael.CreateDecryptor())
+                        {
+                            using (MemoryStream msDecrypt = new MemoryStream(IndexData))
+                            {
+                                using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, crypt, CryptoStreamMode.Read))
+                                {
+                                    using (StreamReader srDecrypt = new StreamReader(csDecrypt))
+                                    {
+                                        csDecrypt.CopyTo(DataStream);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
-            return;
+
+            using (var reader = new FArchive(IndexData))
+            {
+                reader.Version = Info.Version;
+                MountPoint = reader.ToFString();
+                int NumEntries = reader.ToInt32();
+                for (int i = 0; i < NumEntries; i++)
+                {
+                    string FileName = reader.ToFString();
+                    var entry = new FPakEntry();
+                    entry.Serialize(reader);
+                    AbsoluteIndex.Add(FileName, entry);
+                    Index.Add(FileName, entry);
+                }
+            }
         }
 
         public byte[] ReadEntry(object entry)
@@ -170,8 +203,9 @@ namespace UE4View.UE4.Pak
             stream.Close();
         }
         public string OriginalFileName { get; private set; }
+        public string FilePath { get; private set; }
 
-        public FPakInfo Info { get; private set; }
+        public FPakInfo Info { get; } = new FPakInfo();
         public FFileIndex Index { get; } = new FFileIndex();
         public Dictionary<string, FPakEntry> AbsoluteIndex { get; } = new Dictionary<string, FPakEntry>();
         public string MountPoint { get; private set; }

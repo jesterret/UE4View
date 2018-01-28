@@ -23,17 +23,16 @@ namespace UE4View
         public PakExplorer(FPakFile Pak) : this(null, Pak.Index, Pak.OriginalFileName)
         {
             InspectedFile = Pak;
-            new UE4.Localization.LocalizationManager(Pak.ReadEntryByName("/*/Content/Localization/Game/en/*.locres"));
-            return;
+            //new UE4.Localization.LocalizationManager(Pak.ReadEntryByName("/*/Content/Localization/Game/en/*.locres"));
         }
         PakExplorer(Explorer Parent, FFileIndex Index, string Loc) : this(Parent, Loc)
         {
             Task.Run(() => ParseFileIndex(Index));
         }
-        PakExplorer(Explorer Parent, string Loc) : this()
+        PakExplorer(Explorer parent, string location) : this()
         {
-            this.Parent = Parent;
-            this.Location = Path.Combine(Parent?.Location ?? string.Empty, Loc);
+            Parent = parent;
+            Location = Path.Combine(parent?.Location ?? string.Empty, location);
         }
         PakExplorer() : base(new Guid("dc1d3a1f-22da-4aae-954b-cf07f971cf01"))
         {
@@ -211,20 +210,15 @@ namespace UE4View
         {
             if (InspectedFile.Info.Magic == FPakInfo.PakFile_Magic)
             {
-                if (InspectedFile.Info.bEncryptedIndex == false)
+                PakViewPanel = new Panel(this)
                 {
-                    PakViewPanel = new Panel(this)
-                    {
-                        Title = InspectedFile.OriginalFileName,
-                        SortMode = PanelSortMode.Name,
-                        ViewMode = PanelViewMode.Wide,
-                        DotsMode = PanelDotsMode.Dots,
-                        UseSortGroups = true,
-                    };
-                    return PakViewPanel;
-                }
-                else
-                    Far.Api.Message("This PAK file is encrypted!!!");
+                    Title = InspectedFile.OriginalFileName,
+                    SortMode = PanelSortMode.Name,
+                    ViewMode = PanelViewMode.Wide,
+                    DotsMode = PanelDotsMode.Dots,
+                    UseSortGroups = true,
+                };
+                return PakViewPanel;
             }
             else
                 Far.Api.Message("Not an UE4 PAK file format");

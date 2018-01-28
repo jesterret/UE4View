@@ -28,25 +28,19 @@ namespace UE4View
         {
             var filename = e.Command;
             if (filename.EndsWith(".pak"))
-            {
                 new PakExplorer(new FPakFile(filename)).OpenPanel();
-            }
             else if (filename.EndsWith(".bnk"))
-            {
                 new BankExplorer(new BankFile(File.ReadAllBytes(filename))).OpenPanel();
-            }
             else if (filename.EndsWith(".uasset"))
             {
                 //new UAsset(File.ReadAllBytes(filename), 506);
-                // check whether we can find a localisation in this directory
+                // check whether we can find a localization in this directory
                 if(Directory.EnumerateFiles(Far.Api.CurrentDirectory, "*.locres").FirstOrDefault() is string found)
                     new UE4.Localization.LocalizationManager(File.ReadAllBytes(found));
 
                 var data = new UE4.UAsset.Export.UDataTable(File.ReadAllBytes(filename), 506);
                 using (var file = File.CreateText(filename + ".log"))
-                {
                     data.ReadRows(file);
-                }
             }
         }
     }

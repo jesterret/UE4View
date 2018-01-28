@@ -147,8 +147,8 @@ namespace UE4View.UE4.UAsset
                 var Number = ToInt32();
                 return NameMap[NameIndex];
             }
+
             throw new ArgumentOutOfRangeException(nameof(NameIndex));
-            //return base.ToName();
         }
     }
 }

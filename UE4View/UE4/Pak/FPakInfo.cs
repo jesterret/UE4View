@@ -2,7 +2,7 @@
 
 namespace UE4View.UE4.Pak
 {
-    public class FPakInfo
+    public class FPakInfo : USerializable
     {
         /** Magic number to use in header */
         public const long PakFile_Magic = 0x5A6F12E1;
@@ -31,30 +31,26 @@ namespace UE4View.UE4.Pak
         /** Index SHA1 value. */
         public byte[] IndexHash = new byte[20];
         /** Flag indicating if the pak index has been encrypted. */
-        public bool bEncryptedIndex;
+        public byte bEncryptedIndex;
 
         public static long GetSerializedSize()
         {
             return 45;
         }
 
-        public FPakInfo(byte[] bytes)
+        public override FArchive Serialize(FArchive reader)
         {
-            if (bytes != null && bytes.Length < GetSerializedSize())
-            {
-                Magic = 0;
-                return;
-            }
-
-            bEncryptedIndex = BitConverter.ToBoolean(bytes, 0);
-            Magic = BitConverter.ToUInt32(bytes, 1);
-            Version = BitConverter.ToInt32(bytes, 5);
-            IndexOffset = BitConverter.ToInt64(bytes, 9);
-            IndexSize = BitConverter.ToInt64(bytes, 17);
-            Array.Copy(bytes, 25, IndexHash, 0, 20);
-
+            bEncryptedIndex = reader.ToByte();
+            Magic = reader.ToUInt32();
+            Version = reader.ToInt32();
+            IndexOffset = reader.ToInt64();
+            IndexSize = reader.ToInt64();
+            IndexHash = reader.ToByteArray(20);
+            
             if (Version < (int)PakVersion.IndexEncryption)
-                bEncryptedIndex = false;
+                bEncryptedIndex = 0;
+
+            return reader;
         }
     }
 }

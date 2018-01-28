@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using FKeysTable = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<UE4View.UE4.Localization.FEntry>>;
+using FKeysTable = System.Collections.Generic.Dictionary<string, UE4View.UE4.Localization.FEntry>;
 
 namespace UE4View.UE4.Localization
 {
@@ -12,7 +12,8 @@ namespace UE4View.UE4.Localization
     {
         public LocalizationManager(byte[] data)
         {
-            Serialize(new FArchive(data));
+            if(data != null)
+                Serialize(data);
         }
 
         public override FArchive Serialize(FArchive reader)
@@ -28,12 +29,10 @@ namespace UE4View.UE4.Localization
                     foreach (var j in Enumerable.Range(0, (int)KeyCount))
                     {
                         var Key = reader.ToFString();
-                        var EntryArray = KeyTable.FindOrAdd(Key);
-
-                        var NewEntry = new FEntry();
-                        NewEntry.SourceStringHash = reader.ToInt32();
-                        NewEntry.LocalizedString = reader.ToFString();
-                        EntryArray.Add(NewEntry);
+                        var Entry = KeyTable.FindOrAdd(Key);
+                        
+                        Entry.SourceStringHash = reader.ToInt32();
+                        Entry.LocalizedString = reader.ToFString();
                     }
                 }
             }

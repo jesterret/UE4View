@@ -34,7 +34,7 @@ namespace UE4View.UE4.NativeStructs
         byte TangentMode;
         byte TangentWeightMode;
         float Time;
-        float Value;
+        new float Value;
         float ArriveTangent;
         float ArriveTangentWeight;
         float LeaveTangent;
