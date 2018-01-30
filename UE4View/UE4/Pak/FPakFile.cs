@@ -58,36 +58,7 @@ namespace UE4View.UE4.Pak
         {
             var IndexData = ReadStreamData(Info.IndexOffset, Info.IndexSize);
             if (Info.bEncryptedIndex != 0)
-            {
-                using (var DataStream = new MemoryStream(IndexData))
-                {
-                    using (var rijndael = new RijndaelManaged())
-                    {
-                        rijndael.Mode = CipherMode.ECB;
-                        rijndael.Padding = PaddingMode.Zeros;
-                        rijndael.IV = new byte[16];
-                        rijndael.BlockSize = 128;
-
-                        // TODO: This is a "Darwin Project" encryption key. Change this to a dictionary of encryption keys and match them with the specific games
-                        // rijndael.Key = System.Text.Encoding.UTF8.GetBytes("e3VqgSMhuaPw75fm0PdGZCN3ASwpVOk5Ij7iLf8VOEdqGL6aw05JeX0RHMgBvypd").Take(32).ToArray(); // Darwin
-                        rijndael.Key = System.Text.Encoding.UTF8.GetBytes("y298qjSb115NqQ3Agad30DWn2QYrTI8CT6aP05l2PBV9Qe92S94PdoVCCy06A38L").Take(32).ToArray(); // Fortnite
-
-                        using (var crypt = rijndael.CreateDecryptor())
-                        {
-                            using (MemoryStream msDecrypt = new MemoryStream(IndexData))
-                            {
-                                using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, crypt, CryptoStreamMode.Read))
-                                {
-                                    using (StreamReader srDecrypt = new StreamReader(csDecrypt))
-                                    {
-                                        csDecrypt.CopyTo(DataStream);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+                DecryptData(ref IndexData);
 
             using (var reader = new FArchive(IndexData))
             {
@@ -101,6 +72,32 @@ namespace UE4View.UE4.Pak
                     entry.Serialize(reader);
                     AbsoluteIndex.Add(FileName, entry);
                     Index.Add(FileName, entry);
+                }
+            }
+        }
+
+        private void DecryptData(ref byte[] data)
+        {
+            using (var rijndael = new RijndaelManaged())
+            {
+                rijndael.Mode = CipherMode.ECB;
+                rijndael.Padding = PaddingMode.Zeros;
+                rijndael.IV = new byte[16];
+                rijndael.BlockSize = 128;
+
+                // TODO: This is a "Darwin Project" encryption key. Change this to a dictionary of encryption keys and match them with the specific games
+                rijndael.Key = System.Text.Encoding.UTF8.GetBytes("e3VqgSMhuaPw75fm0PdGZCN3ASwpVOk5Ij7iLf8VOEdqGL6aw05JeX0RHMgBvypd").Take(32).ToArray(); // Darwin
+                // rijndael.Key = System.Text.Encoding.UTF8.GetBytes("y298qjSb115NqQ3Agad30DWn2QYrTI8CT6aP05l2PBV9Qe92S94PdoVCCy06A38L").Take(32).ToArray(); // Fortnite
+
+                using (var crypt = rijndael.CreateDecryptor())
+                {
+                    using (MemoryStream msDecrypt = new MemoryStream(data))
+                    {
+                        using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, crypt, CryptoStreamMode.Read))
+                        {
+                            csDecrypt.CopyTo(new MemoryStream(data));
+                        }
+                    }
                 }
             }
         }
