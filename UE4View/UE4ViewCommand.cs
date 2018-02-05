@@ -7,7 +7,6 @@ using UE4View.UE4.VorbisBank;
 
 namespace UE4View
 {
-    // Demo tool with an item in the plugin menu.
     [System.Runtime.InteropServices.Guid("dc1d3a1f-22da-4aae-954b-cf07f971cf00")]
     [ModuleCommand(Name = "UE4 Viewer", Prefix = "UE4View")]
     public class UE4ViewCommand : ModuleCommand
@@ -33,14 +32,11 @@ namespace UE4View
                 new BankExplorer(new BankFile(File.ReadAllBytes(filename))).OpenPanel();
             else if (filename.EndsWith(".uasset"))
             {
-                //new UAsset(File.ReadAllBytes(filename), 506);
                 // check whether we can find a localization in this directory
-                if(Directory.EnumerateFiles(Far.Api.CurrentDirectory, "*.locres").FirstOrDefault() is string found)
+                if (Directory.EnumerateFiles(Far.Api.CurrentDirectory, "*.locres").FirstOrDefault() is string found)
                     new UE4.Localization.LocalizationManager(File.ReadAllBytes(found));
 
-                var data = new UE4.UAsset.Export.UDataTable(File.ReadAllBytes(filename), 506);
-                using (var file = File.CreateText(filename + ".log"))
-                    data.ReadRows(file);
+                new UAsset(File.ReadAllBytes(filename), 506);
             }
         }
     }

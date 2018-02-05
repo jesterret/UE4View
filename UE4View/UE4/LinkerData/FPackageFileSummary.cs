@@ -28,6 +28,7 @@ namespace UE4View.UE4
         public int DependsOffset;
         public int StringAssetReferencesCount;
         public int StringAssetReferencesOffset;
+        public int SearchableNamesOffset;
         public int ThumbnailTableOffset;
         public Guid Guid;
         public List<FGenerationInfo> Generations = new List<FGenerationInfo>();
@@ -54,7 +55,7 @@ namespace UE4View.UE4
             if (Tag != PACKAGE_TAG_MAGIC)
                 return reader;
 
-            const int CurrentLegacyFileVersion = -6;
+            const int CurrentLegacyFileVersion = -7;
             int LegacyFileVersion = reader.ToInt32();
             if (LegacyFileVersion < 0)
             {
@@ -147,6 +148,10 @@ namespace UE4View.UE4
             {
                 StringAssetReferencesCount = reader.ToInt32();
                 StringAssetReferencesOffset = reader.ToInt32();
+            }
+            if (FileVersionUE4 >= (int)ObjectVersion.EUnrealEngineObjectUE4Version.VER_UE4_ADDED_SEARCHABLE_NAMES)
+            {
+                SearchableNamesOffset = reader.ToInt32();
             }
 
             ThumbnailTableOffset = reader.ToInt32();

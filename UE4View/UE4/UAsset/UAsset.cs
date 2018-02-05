@@ -88,28 +88,11 @@ namespace UE4View.UE4.UAsset
             //    }
             //}
 
-            var Default = ExportMap.Where(exp => ImpExp(exp.ClassIndex).ObjectName.StartsWith("Default__")).FirstOrDefault();
-            if (Default != null)
+            var ExportInfo = ExportMap.LastOrDefault();
+            if (ExportInfo != null)
             {
-                Seek((int)Default.SerialOffset);
-                using (var wr = File.CreateText(Path.Combine(Far.Api.CurrentDirectory, Default.ObjectName + ".log")))
-                {
-                    try
-                    {
-                        FPropertyTag.WriteAll(this, wr);
-                    }
-                    catch
-                    {
-                        wr.Flush();
-                    }
-                }
-            }
-
-            foreach (var exp in ExportMap)
-            {
-                Seek((int)exp.SerialOffset);
-                Directory.CreateDirectory(Path.Combine(Far.Api.CurrentDirectory, "Asset"));
-                using (var wr = File.CreateText(Path.Combine(Far.Api.CurrentDirectory, "Asset", exp.ObjectName + ".log")))
+                Seek((int)ExportInfo.SerialOffset);
+                using (var wr = File.CreateText(Path.Combine(Far.Api.CurrentDirectory, ExportInfo.ObjectName + ".log")))
                 {
                     try
                     {
