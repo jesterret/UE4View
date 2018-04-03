@@ -1,5 +1,8 @@
-﻿namespace UE4View.UE4
+﻿using System.Diagnostics;
+
+namespace UE4View.UE4
 {
+    [DebuggerDisplay("ClassName: {ClassName} ObjectName: {ObjectName}")]
     public class FObjectImport : FObjectResource
     {
         public string ClassPackage;

@@ -10,11 +10,10 @@ namespace UE4View.UE4.NativeStructs
     {
         public override FArchive Serialize(FArchive reader, FPropertyTag tag)
         {
-            float X, Y, Z;
-            X = reader.ToFloat();
-            Y = reader.ToFloat();
-            Z = reader.ToFloat();
-            Value = string.Format("{{ {0}, {1}, {2} }}", X, Y, Z);
+            float X = reader.ToFloat();
+            float Y = reader.ToFloat();
+            float Z = reader.ToFloat();
+            Value = $"Vector [X={X}, Y={Y}, Z={Z}]";
             return reader;
         }
     }

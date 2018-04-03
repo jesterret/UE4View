@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -55,16 +56,19 @@ namespace UE4View.UE4.NativeStructs
             LeaveTangent = reader.ToFloat();
             LeaveTangentWeight = reader.ToFloat();
 
-            base.Value = string.Empty;
-            base.Value += string.Format("{0}: {1}{2}", nameof(InterpMode), InterpMode, Environment.NewLine);
-            base.Value += string.Format("{0}: {1}{2}", nameof(TangentMode), TangentMode, Environment.NewLine);
-            base.Value += string.Format("{0}: {1}{2}", nameof(TangentWeightMode), TangentWeightMode, Environment.NewLine);
-            base.Value += string.Format("{0}: {1}{2}", nameof(Time), Time, Environment.NewLine);
-            base.Value += string.Format("{0}: {1}{2}", nameof(Value), Value, Environment.NewLine);
-            base.Value += string.Format("{0}: {1}{2}", nameof(ArriveTangent), ArriveTangent, Environment.NewLine);
-            base.Value += string.Format("{0}: {1}{2}", nameof(ArriveTangentWeight), ArriveTangentWeight, Environment.NewLine);
-            base.Value += string.Format("{0}: {1}{2}", nameof(LeaveTangent), LeaveTangent, Environment.NewLine);
-            base.Value += string.Format("{0}: {1}{2}", nameof(LeaveTangentWeight), LeaveTangentWeight, Environment.NewLine);
+            using (var sw = new StringWriter(new StringBuilder()))
+            {
+                sw.WriteLine("{0}: {1}", nameof(InterpMode), InterpMode);
+                sw.WriteLine("{0}: {1}", nameof(TangentMode), TangentMode);
+                sw.WriteLine("{0}: {1}", nameof(TangentWeightMode), TangentWeightMode);
+                sw.WriteLine("{0}: {1}", nameof(Time), Time);
+                sw.WriteLine("{0}: {1}", nameof(Value), Value);
+                sw.WriteLine("{0}: {1}", nameof(ArriveTangent), ArriveTangent);
+                sw.WriteLine("{0}: {1}", nameof(ArriveTangentWeight), ArriveTangentWeight);
+                sw.WriteLine("{0}: {1}", nameof(LeaveTangent), LeaveTangent);
+                sw.WriteLine("{0}: {1}", nameof(LeaveTangentWeight), LeaveTangentWeight);
+                base.Value = sw.ToString();
+            }
             return reader;
         }
     }

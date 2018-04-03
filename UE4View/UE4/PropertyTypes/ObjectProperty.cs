@@ -39,10 +39,10 @@ namespace UE4View.UE4.PropertyTypes
                 }
                 else if (resource is FObjectImport imp)
                 {
-                    if (imp.ClassName == "ScriptStruct")
-                        Value = ReadResource(imp, reader);
-                    else
-                        Value = imp;
+                    //if (imp.ClassName == "ScriptStruct")
+                    //    Value = ReadResource(imp, reader);
+                    //else
+                        Value = imp.XObject;
                 }
             }
             else

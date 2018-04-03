@@ -36,8 +36,18 @@ namespace UE4View
                 if (Directory.EnumerateFiles(Far.Api.CurrentDirectory, "*.locres").FirstOrDefault() is string found)
                     new UE4.Localization.LocalizationManager(File.ReadAllBytes(found));
 
-                new UAsset(File.ReadAllBytes(filename), 506);
+                var uexps = filename.Replace(".uasset", ".uexp");
+                var data = File.ReadAllBytes(filename);
+                if (File.Exists(uexps))
+                    data = data.Concat(File.ReadAllBytes(uexps)).ToArray();
+                
+                new UAsset(data, 506);
+                var table = new UE4.UAsset.Export.UDataTable(File.ReadAllBytes(filename), 506);
+                using (var file = File.CreateText(filename + ".log"))
+                    table.ReadRows(file);
             }
+            else
+                e.Ignore = true;
         }
     }
 }

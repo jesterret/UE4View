@@ -62,7 +62,8 @@ namespace UE4View
         public override Explorer OpenFile(OpenFileEventArgs args)
         {
             var filedata = args.File.Data ?? GetFileData(args.File);
-            if (args.File.Name.EndsWith(".bnk") && filedata is FPakEntry entry)
+            var filename = args.File.Name;
+            if (filename.EndsWith(".bnk") && filedata is FPakEntry entry)
             {
                 var data = InspectedFile.ReadEntry(entry);
                 var bankinfo = _files.Where(f => f.Name == "SoundbanksInfo.xml").SingleOrDefault();
@@ -78,9 +79,14 @@ namespace UE4View
                 else
                     return new UE4.VorbisBank.BankExplorer(new UE4.VorbisBank.BankFile(data));
             }
-            else if (args.File.Name.EndsWith(".uasset") && filedata is FPakEntry asset)
+            else if (filename.EndsWith(".uasset") && filedata is FPakEntry asset)
             {
+                var uexps = Path.GetFileNameWithoutExtension(filename) + ".uexp";
                 var data = InspectedFile.ReadEntry(filedata);
+                var expData = GetFileData(uexps);
+                if (expData != null)
+                    data = data.Concat(InspectedFile.ReadEntry(expData)).ToArray();
+
                 new UAsset(data, GetCookedAssetVersion());
                 return null;
             }
@@ -208,7 +214,7 @@ namespace UE4View
 
         public override Panel CreatePanel()
         {
-            if (InspectedFile.Info.Magic == FPakInfo.PakFile_Magic)
+            if (InspectedFile.IsValid())
             {
                 PakViewPanel = new Panel(this)
                 {
@@ -226,7 +232,8 @@ namespace UE4View
             return null;
         }
 
-        private object GetFileData(FarFile file) => _files.Where(f => f.Name == file.Name).Single().Data;
+        private object GetFileData(FarFile file) => GetFileData(file.Name);
+        private object GetFileData(string name) => _files.Where(f => f.Name == name).Single().Data;
 
         public override IList<FarFile> GetFiles(GetFilesEventArgs args) => _files;
     }

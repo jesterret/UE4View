@@ -6,7 +6,7 @@ namespace UE4View.UE4
     {
         public int ClassIndex;
         public int SuperIndex;
-        public int Save;
+        public int ObjectFlags;
         public long SerialSize;
         public long SerialOffset;
         public bool bForcedExport;
@@ -34,8 +34,7 @@ namespace UE4View.UE4
             OuterIndex = reader.ToInt32();
             ObjectName = reader.ToName();
 
-            Save = reader.ToInt32();
-            // Object flags here
+            ObjectFlags = reader.ToInt32();
 
             if(reader.Version < (int)ObjectVersion.EUnrealEngineObjectUE4Version.VER_UE4_64BIT_EXPORTMAP_SERIALSIZES)
             {

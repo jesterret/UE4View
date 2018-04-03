@@ -134,15 +134,11 @@ namespace UE4View.UE4
         public List<T> ToArray<T>() where T : USerializable, new()
         {
             var len = ToInt32();
+            var items = new List<T>(len);
             if (len > 0)
-            {
-                var items = new List<T>(len);
-                foreach (var i in Enumerable.Range(0, len))
-                    items.Add(ToObject<T>());
+                items.AddRange(Enumerable.Range(0, len).Select(i => ToObject<T>()));
 
-                return items;
-            }
-            return null;
+            return items;
         }
         public T ToObject<T>() where T : USerializable, new()
         {

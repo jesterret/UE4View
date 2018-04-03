@@ -30,21 +30,21 @@ namespace UE4View.UE4.Pak
             }
         }
         /** Offset into pak file where the file is stored.*/
-        public long Offset;
+        public long Offset { get; private set; }
         /** Serialized file size. */
-        public long Size;
+        public long Size { get; private set; }
         /** Uncompressed file size. */
-        public long UncompressedSize;
+        public long UncompressedSize { get; private set; }
         /** Compression method. */
-        public ECompressionFlags CompressionMethod;
+        public ECompressionFlags CompressionMethod { get; private set; }
         /** File SHA1 value. */
-        byte[] Hash = new byte[20];
+        byte[] Hash { get; } = new byte[20];
         /** Array of compression blocks that describe how to decompress this pak entry. */
-        public List<FPakCompressedBlock> CompressionBlocks;
+        public List<FPakCompressedBlock> CompressionBlocks { get; private set; }
         /** Size of a compressed block in the file. */
-        public uint CompressionBlockSize;
+        public uint CompressionBlockSize { get; private set; }
         /** True is file is encrypted. */
-        public byte bEncrypted;
+        public byte Encrypted { get; private set; }
 
         public long GetSerializedSize(int version)
         {
@@ -81,7 +81,7 @@ namespace UE4View.UE4.Pak
                 if (CompressionMethod != ECompressionFlags.COMPRESS_None)
                     CompressionBlocks = reader.ToArray<FPakCompressedBlock>();
 
-                bEncrypted = reader.ToByte();
+                Encrypted = reader.ToByte();
                 CompressionBlockSize = reader.ToUInt32();
             }
             return reader;

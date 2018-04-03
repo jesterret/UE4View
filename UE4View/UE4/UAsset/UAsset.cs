@@ -69,7 +69,10 @@ namespace UE4View.UE4.UAsset
             // TODO: Fixup imports & exports from indexes to names, match exports with exporter object
             foreach (var imp in ImportMap)
             {
-                imp.XObject = string.Format("{0} {1}.{2}", imp.ClassName, ImpExp(imp.OuterIndex).ObjectName, imp.ObjectName);
+                if(imp.ClassName == "Package")
+                    imp.XObject = $"{imp.ClassName} {imp.ObjectName}";
+                else
+                    imp.XObject = string.Format("{0} {1}.{2}", imp.ClassName, ImpExp(imp.OuterIndex).ObjectName, imp.ObjectName);
             }
             //var ufunc = ExportMap.Where(exp => ImpExp(exp.ClassIndex).ObjectName == "Function").ToArray();
             //foreach(var func in ufunc)
@@ -88,7 +91,7 @@ namespace UE4View.UE4.UAsset
             //    }
             //}
 
-            var ExportInfo = ExportMap.LastOrDefault();
+            var ExportInfo = ExportMap.Where(ex => ex.bIsAsset).SingleOrDefault();
             if (ExportInfo != null)
             {
                 Seek((int)ExportInfo.SerialOffset);
@@ -97,6 +100,12 @@ namespace UE4View.UE4.UAsset
                     try
                     {
                         FPropertyTag.WriteAll(this, wr);
+                        var nativeSize = ExportInfo.SerialOffset + ExportInfo.SerialSize - Tell();
+                        if (nativeSize > 0)
+                        {
+                            wr.WriteLine("Found {0} bytes of native data.", nativeSize);
+                            wr.Write(BitConverter.ToString(ToByteArray((int)nativeSize)));
+                        }
                     }
                     catch
                     {

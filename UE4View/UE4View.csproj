@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>UE4View</RootNamespace>
     <AssemblyName>UE4View</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -60,12 +60,15 @@
     <Compile Include="UE4\LinkerData\FObjectResource.cs" />
     <Compile Include="UE4\Localization\FEntry.cs" />
     <Compile Include="UE4\Localization\LocalizationManager.cs" />
+    <Compile Include="UE4\NativeStructs\Color.cs" />
     <Compile Include="UE4\NativeStructs\Guid.cs" />
+    <Compile Include="UE4\NativeStructs\IntPoint.cs" />
     <Compile Include="UE4\NativeStructs\LinearColor.cs" />
     <Compile Include="UE4\NativeStructs\RichCurveKey.cs" />
     <Compile Include="UE4\NativeStructs\Rotator.cs" />
     <Compile Include="UE4\NativeStructs\UStruct.cs" />
     <Compile Include="UE4\NativeStructs\Vector.cs" />
+    <Compile Include="UE4\Pak\PakReader.cs" />
     <Compile Include="UE4\PropertyTypes\ArrayProperty.cs" />
     <Compile Include="UE4\PropertyTypes\ArrayPropertyBase.cs" />
     <Compile Include="UE4\PropertyTypes\AssetObjectProperty.cs" />
@@ -79,7 +82,7 @@
     <Compile Include="UE4\PropertyTypes\StrProperty.cs" />
     <Compile Include="UE4\PropertyTypes\StructProperty.cs" />
     <Compile Include="UE4\PropertyTypes\TextProperty.cs" />
-    <Compile Include="UE4\PropertyTypes\UPropertyBase.cs" />
+    <Compile Include="UE4\PropertyTypes\UProperty.cs" />
     <Compile Include="UE4\UAsset\ExportTypes.cs" />
     <Compile Include="UE4\UAsset\Export\UDataTable.cs" />
     <Compile Include="UE4\VorbisBank\BankExplorer.cs" />

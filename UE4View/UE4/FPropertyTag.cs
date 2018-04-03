@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
 namespace UE4View.UE4
 {
+
+    [DebuggerDisplay("{Type} {Name}")]
     public class FPropertyTag : USerializable
     {
         public string Name;        // Name of property
