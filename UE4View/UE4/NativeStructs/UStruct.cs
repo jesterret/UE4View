@@ -1,18 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using UE4View.UE4.PropertyTypes;
 
 namespace UE4View.UE4.NativeStructs
 {
-    public abstract class UStruct
+    public abstract class UStruct : UProperty
     {
-        public object Value;
-
-        public override string ToString() => Value.ToString();
-        public abstract FArchive Serialize(FArchive reader, FPropertyTag tag);
-
         public static Dictionary<string, Type> Structures { get; } = typeof(UStruct).Assembly.GetTypes().Where(t => !t.IsAbstract && t.IsSubclassOf(typeof(UStruct))).ToDictionary(t => t.Name);
     }
 }

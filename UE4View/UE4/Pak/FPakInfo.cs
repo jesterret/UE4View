@@ -33,12 +33,16 @@ namespace UE4View.UE4.Pak
         /** Flag indicating if the pak index has been encrypted. */
         public byte bEncryptedIndex;
 
+        public FPakInfo(FArchive reader) : base(reader)
+        {
+        }
+
         public static long GetSerializedSize()
         {
             return 45;
         }
 
-        public override FArchive Serialize(FArchive reader)
+        public override void Serialize(FArchive reader)
         {
             bEncryptedIndex = reader.ToByte();
             Magic = reader.ToUInt32();
@@ -49,8 +53,7 @@ namespace UE4View.UE4.Pak
             
             if (Version < (int)PakVersion.IndexEncryption)
                 bEncryptedIndex = 0;
-
-            return reader;
+            
         }
     }
 }

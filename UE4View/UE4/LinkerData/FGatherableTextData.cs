@@ -6,15 +6,18 @@ namespace UE4View.UE4
     class FGatherableTextData : USerializable
     {
         public string NamespaceName;
-        public FTextSourceData SourceData = new FTextSourceData();
+        public FTextSourceData SourceData;
         public List<FTextSourceSiteContext> SourceSiteContexts;
 
-        public override FArchive Serialize(FArchive reader)
+        public FGatherableTextData(FArchive reader) : base(reader)
+        {
+        }
+
+        public override void Serialize(FArchive reader)
         {
             NamespaceName = reader.ToFString();
-            SourceData.Serialize(reader);
+            SourceData = new FTextSourceData(reader);
             SourceSiteContexts = reader.ToArray<FTextSourceSiteContext>();
-            return reader;
         }
     }
 }

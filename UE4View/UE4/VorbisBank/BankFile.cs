@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using UE4View.UE4.VorbisBank.Xml;
 
 namespace UE4View.UE4.VorbisBank
 {
-
-    // TODO: Cleanup the code, it's really messy because I didn't believe it would be that simple.
     class BankFile
     {
         int offset;
@@ -19,6 +18,15 @@ namespace UE4View.UE4.VorbisBank
 
         public int DIDXMagic;
         public int ChunkLength;
+
+        const int BANK_MAGIC = 0x44484B42; // 'BKHD'
+        const int DIDX_MAGIC = 0x58444944; // 'DIDX'
+        const int DATA_MAGIC = 0x41544144; // 'DATA'
+
+        // 0x0 Track ID
+        // 0x4 Offset
+        // 0x8 Data Length
+        const int ENTRY_SIZE = 0xC; 
 
         public class BankTrack
         {
@@ -40,7 +48,7 @@ namespace UE4View.UE4.VorbisBank
             Buffer = Data;
 
             Magic = ToInt32();
-            if (Magic == 0x44484B42)
+            if (Magic == BANK_MAGIC)
             {
                 HeaderLength = ToInt32();
                 var HeaderEnd = Tell();
@@ -50,10 +58,10 @@ namespace UE4View.UE4.VorbisBank
                 Seek(HeaderEnd + HeaderLength);
 
                 DIDXMagic = ToInt32();
-                if (DIDXMagic == 0x58444944)
+                if (DIDXMagic == DIDX_MAGIC)
                 {
                     ChunkLength = ToInt32();
-                    var filecount = ChunkLength / 12;
+                    var filecount = ChunkLength / ENTRY_SIZE;
                     Files = new List<BankTrack>(filecount);
                     foreach (var i in Enumerable.Range(0, filecount))
                     {
@@ -69,7 +77,13 @@ namespace UE4View.UE4.VorbisBank
                 }
 
                 var DataMagic = ToInt32();
-                var DataLen = ToInt32();
+                if (DataMagic == DATA_MAGIC)
+                {
+                    var DataLen = ToInt32();
+                    // after that this.offset points to the start of tracks array, 
+                }
+                else
+                    Debugger.Break(); // that's unexpected, there should be DATA header, guess it could be resolved by while(ToInt32() != DATA_MAGIC)){}
             }
         }
         public byte[] ReadTrack(BankTrack track)

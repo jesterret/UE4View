@@ -1,14 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace UE4View.UE4.Pak
 {
-    public class FPakFile : IDisposable
+    [DebuggerDisplay("{OriginalFileName}, {AbsoluteIndex.Count} files")]
+    public sealed class FPakFile : IDisposable
     {
         public FPakFile(string FileName)
         {
@@ -49,7 +52,7 @@ namespace UE4View.UE4.Pak
         {
             var InfoSize = FPakInfo.GetSerializedSize();
             var InfoData = ReadStreamData(-InfoSize, InfoSize);
-            Info.Serialize(InfoData);
+            Info = new FPakInfo(InfoData);
 
             if (IsPakMagic())
                 LoadIndex();
@@ -67,10 +70,9 @@ namespace UE4View.UE4.Pak
                 int NumEntries = reader.ToInt32();
                 for (int i = 0; i < NumEntries; i++)
                 {
-                    string FileName = reader.ToFString();
-                    var entry = new FPakEntry();
-                    entry.Serialize(reader);
-                    AbsoluteIndex.Add(FileName, entry);
+                    var FileName = reader.ToFString();
+                    var FilePath = Path.Combine(MountPoint, FileName);
+                    AbsoluteIndex.Add(FilePath, new FPakEntry(reader));
                 }
             }
         }
@@ -93,14 +95,11 @@ namespace UE4View.UE4.Pak
                 rijndael.Key = key.ToCharArray().Select(c => (byte)c).Take(32).ToArray();
                 using (var crypt = rijndael.CreateDecryptor())
                 {
-                    using (MemoryStream msDecrypt = new MemoryStream(data))
+                    using (CryptoStream csDecrypt = new CryptoStream(new MemoryStream(data), crypt, CryptoStreamMode.Read))
                     {
-                        using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, crypt, CryptoStreamMode.Read))
+                        using (MemoryStream outData = new MemoryStream(data))
                         {
-                            using (MemoryStream outData = new MemoryStream(data))
-                            {
-                                csDecrypt.CopyTo(outData);
-                            }
+                            csDecrypt.CopyTo(outData);
                         }
                     }
                 }
@@ -122,25 +121,20 @@ namespace UE4View.UE4.Pak
 
                 if (entry.CompressionMethod == FPakEntry.ECompressionFlags.COMPRESS_ZLIB)
                 {
-                    using (var compressed = new MemoryStream(data, 2, data.Length - 2)) // skip 2 bytes for zlib specification
+                    using (var decstream = new DeflateStream(new MemoryStream(data.Skip(2).ToArray()), CompressionMode.Decompress))
                     {
-                        using (var decstream = new DeflateStream(compressed, CompressionMode.Decompress))
-                        {
-                            while(offset < entry.UncompressedSize)
-                                offset += decstream.Read(decompressed, offset, (int)UncompressedBlockSize);
-                        }
+                        while (offset < entry.UncompressedSize)
+                            offset += decstream.Read(decompressed, offset, (int)UncompressedBlockSize);
                     }
                 }
                 // TODO: Test if GZip decompresses fine.
                 else if (entry.CompressionMethod == FPakEntry.ECompressionFlags.COMPRESS_GZIP)
                 {
-                    System.Diagnostics.Debugger.Break();
-                    using (var compressed = new MemoryStream(data))
+                    Debugger.Break();
+                    using (var decstream = new GZipStream(new MemoryStream(data), CompressionMode.Decompress))
                     {
-                        using (var decstream = new GZipStream(compressed, CompressionMode.Decompress))
-                        {
+                        while (offset < entry.UncompressedSize)
                             offset += decstream.Read(decompressed, offset, (int)UncompressedBlockSize);
-                        }
                     }
                 }
                 Index++;
@@ -153,7 +147,7 @@ namespace UE4View.UE4.Pak
         public bool IsPakMagic() => Info.Magic == FPakInfo.PakFile_Magic;
         public bool IsEncrypted() => Info.bEncryptedIndex != 0;
         public bool CanDecrypt() => IsEncrypted() && GetDecryptionKey() != null;
-        // Make this into a dictionary 
+        // TODO: Make this into a dictionary 
         private string GetDecryptionKey() =>
             //"e3VqgSMhuaPw75fm0PdGZCN3ASwpVOk5Ij7iLf8VOEdqGL6aw05JeX0RHMgBvypd" // Darwin
             //"y298qjSb115NqQ3Agad30DWn2QYrTI8CT6aP05l2PBV9Qe92S94PdoVCCy06A38L" // Fortnite
@@ -163,14 +157,22 @@ namespace UE4View.UE4.Pak
             ;
 
         public byte[] ReadEntry(object entry) => ReadEntry(entry as FPakEntry);
-        public byte[] ReadEntry(FPakEntry entry)
+        public byte[] ReadEntry(in FPakEntry entry)
         {
             if (entry != null)
             {
+                if (entry.Encrypted != 0)
+                {
+                    return null;
+                    //Debugger.Break();
+                    //var data = ReadStreamData(entry.Offset, entry.Size);
+                    //DecryptData(ref data, GetDecryptionKey());
+                    //return data;
+                }
                 if (entry.CompressionMethod == FPakEntry.ECompressionFlags.COMPRESS_None)
                     return ReadStreamData(entry.Offset, entry.Size);
                 else
-                    return UnpackEntry(in entry);
+                    return UnpackEntry(entry);
             }
             return null;
         }
@@ -193,13 +195,13 @@ namespace UE4View.UE4.Pak
                 return null;
         }
 
-        private FPakEntry RecursiveSearch(string[] parts, FFileIndex dir)
+        private FPakEntry RecursiveSearch(string[] parts, in FFileIndex dir)
         {
             if (parts.Length == 1)
             {
                 return dir.Files
-                    .Where(kv => new System.Management.Automation.WildcardPattern(parts[0]).IsMatch(kv.Key))
-                    .Select(kv => kv.Value)
+                    .Where(kv => new System.Management.Automation.WildcardPattern(parts[0]).IsMatch(kv.Name))
+                    .Select(kv => kv.Data as FPakEntry)
                     .SingleOrDefault();
             }
             else
@@ -219,19 +221,31 @@ namespace UE4View.UE4.Pak
         }
         public void Close()
         {
-            stream?.Dispose();
-            stream = null;
+            Dispose(); // God have mercy on this code
+            // TODO: PLZ DON'T
         }
 
-        public FPakInfo Info { get; } = new FPakInfo();
+        public void Dispose()
+        {
+            if (stream != null)
+                stream.Dispose();
+            if (_fileIndex != null)
+                _fileIndex.Clear();
+            AbsoluteIndex.Clear();
+        }
+
+        public FPakInfo Info { get; private set; }
+        public string MountPoint { get; private set; }
+        public string OriginalFileName { get; private set; }
+        
         public FFileIndex Index
         {
             get
             {
-                if(_fileIndex == null)
+                if (_fileIndex == null)
                 {
                     _fileIndex = new FFileIndex();
-                    foreach(var kv in AbsoluteIndex)
+                    foreach (var kv in AbsoluteIndex)
                         _fileIndex.Add(kv.Key, kv.Value);
                 }
 
@@ -239,8 +253,6 @@ namespace UE4View.UE4.Pak
             }
         }
         public Dictionary<string, FPakEntry> AbsoluteIndex { get; } = new Dictionary<string, FPakEntry>();
-        public string MountPoint { get; private set; }
-        public string OriginalFileName { get; private set; }
 
         public DateTime CreationTime { get; private set; }
         public DateTime AccessTime { get; private set; }
@@ -248,25 +260,5 @@ namespace UE4View.UE4.Pak
 
         internal FileStream stream = null;
         internal FFileIndex _fileIndex = null;
-
-        #region IDisposable Support
-        private bool disposedValue = false;
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    Close();
-                }
-
-                disposedValue = true;
-            }
-        }
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-        #endregion
     }
 }

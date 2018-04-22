@@ -8,10 +8,9 @@ namespace UE4View.UE4.PropertyTypes
 {
     class BoolProperty : UProperty
     {
-        public override FArchive Serialize(FArchive reader, FPropertyTag tag = null)
+        public override void Serialize(FArchive reader, FPropertyTag tag = null)
         {
             Value = tag.BoolVal != 0;
-            return reader;
         }
     }
 }

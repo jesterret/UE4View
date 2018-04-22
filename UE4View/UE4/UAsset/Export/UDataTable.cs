@@ -10,6 +10,7 @@ namespace UE4View.UE4.UAsset.Export
     {
         object RowStruct;
         FObjectResource TableType;
+        public UDataTable(byte[] data) : this(data, 0) { }
         public UDataTable(byte[] data, int version) : base(data, version)
         {
             var table = ExportMap
@@ -20,13 +21,13 @@ namespace UE4View.UE4.UAsset.Export
                 Seek((int)table.SerialOffset);
                 RowStruct = FPropertyTag.ReadToEnd(this)
                     .Select(prop => prop.ToProperty(this))
-                    .ToArray()
+                    .ToArray() // Resolve all lazy evaluations
                     .First(); // Interested only in Row Struct type, ignoring any other UDataTable property
                 TableType = ImpExp(ToInt32()); // ObjectProperty Index for this DataTable type
             }
         }
 
-        public void ReadRows(TextWriter stream)
+        public void ReadRows(in TextWriter stream)
         {
             if (RowStruct != null)
             {

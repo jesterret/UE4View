@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using UE4View.UE4.PropertyTypes;
 
 namespace UE4View.UE4
 {
@@ -32,7 +33,7 @@ namespace UE4View.UE4
             {
                 destination.Write("{0}: ", prop.Name);
                 var PropValue = prop.ToProperty(source);
-                if (PropValue is PropertyTypes.ArrayPropertyBase array)
+                if (PropValue is ArrayPropertyBase array)
                 {
                     destination.Write("[ ");
                     foreach (var i in Enumerable.Range(0, array.Count))
@@ -56,11 +57,11 @@ namespace UE4View.UE4
             }
         }
 
-        public override FArchive Serialize(FArchive reader)
+        public override void Serialize(FArchive reader)
         {
             Name = reader.ToName();
             if (Name == "None")
-                return reader;
+                return;
 
             SizeOffset = reader.Tell();
             Type = reader.ToName();
@@ -114,33 +115,20 @@ namespace UE4View.UE4
                     PropertyGuid = reader.ToGuid();
                 }
             }
-
-            return reader;
         }
-        public object ToProperty(FArchive reader)
+        public UProperty ToProperty(FArchive reader)
         {
-            if (!string.IsNullOrEmpty(Type))
+            if (PropertyTypes.Where(t => t.Key.StartsWith(Type)).Select(t => t.Value).SingleOrDefault() is Type type)
             {
-                if (PropertyTypes.Where(t => t.Key.StartsWith(Type)).Select(t => t.Value).SingleOrDefault() is Type type)
-                {
-                    if (type.ContainsGenericParameters)
-                    {
-                        var t = type.MakeGenericType(PropertyTypes[InnerType]);
-                        dynamic prop = Activator.CreateInstance(t);
-                        prop.Serialize(reader, this);
-                        return prop;
-                    }
-                    else
-                    {
-                        dynamic prop = Activator.CreateInstance(type);
-                        prop.Serialize(reader, this);
-                        return prop;
-                    }
-                }
-                else
-                    throw new ArgumentException($"Unknown type \"{Type}\", implement handling for that shit.");
+                if (type.ContainsGenericParameters)
+                    type = type.MakeGenericType(PropertyTypes[InnerType]);
+
+                var prop = Activator.CreateInstance(type) as UProperty;
+                prop.Serialize(reader, this);
+                return prop;
             }
-            return null;
+            else
+                throw new ArgumentException($"Unknown type \"{Type}\", implement handling for that shit.");
         }
 
         private static Dictionary<string, Type> PropertyTypes { get; } = typeof(PropertyTypes.UProperty).Assembly.GetTypes().Where(t => !t.IsAbstract && t.IsSubclassOf(typeof(PropertyTypes.UProperty))).ToDictionary(t => t.Name);

@@ -7,7 +7,12 @@ namespace UE4View.UE4
         public string Name;
         public ushort NonCasePreservingHash;
         public ushort CasePreservingHash;
-        public override FArchive Serialize(FArchive reader)
+
+        public FNameEntrySerialized(FArchive reader) : base(reader)
+        {
+        }
+
+        public override void Serialize(FArchive reader)
         {
             Name = reader.ToFString();
 
@@ -16,7 +21,6 @@ namespace UE4View.UE4
                 NonCasePreservingHash = reader.ToUInt16();
                 CasePreservingHash = reader.ToUInt16();
             }
-            return reader;
         }
 
         public override string ToString()

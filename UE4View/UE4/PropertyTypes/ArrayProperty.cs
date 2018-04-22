@@ -9,7 +9,7 @@ namespace UE4View.UE4.PropertyTypes
 {
     class ArrayProperty<T> : ArrayPropertyBase
     {
-        public override FArchive Serialize(FArchive reader, FPropertyTag tag)
+        public override void Serialize(FArchive reader, FPropertyTag tag)
         {
             var Count = reader.ToInt32();
             var Info = tag;
@@ -19,12 +19,11 @@ namespace UE4View.UE4.PropertyTypes
 
             foreach(var i in Enumerable.Range(0, Count))
             {
-                dynamic t = Activator.CreateInstance<T>();
+                var t = Activator.CreateInstance<T>() as UProperty;
                 t.Serialize(reader, Info);
                 array.Add(t.Value);
             }
             Value = array;
-            return reader;
         }
     }
 }

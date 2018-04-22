@@ -8,10 +8,9 @@ namespace UE4View.UE4.PropertyTypes
 {
     class StrProperty : UProperty
     {
-        public override FArchive Serialize(FArchive reader, FPropertyTag tag = null)
+        public override void Serialize(FArchive reader, FPropertyTag tag = null)
         {
             Value = reader.ToFString();
-            return reader;
         }
     }
 }

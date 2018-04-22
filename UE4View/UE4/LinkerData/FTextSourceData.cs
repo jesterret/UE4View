@@ -3,12 +3,16 @@
     class FTextSourceData : USerializable
     {
         public string SourceString;
-        public FLocMetadataObject SourceStringMetaData = new FLocMetadataObject();
-        public override FArchive Serialize(FArchive reader)
+        public FLocMetadataObject SourceStringMetaData;
+
+        public FTextSourceData(FArchive reader) : base(reader)
+        {
+        }
+
+        public override void Serialize(FArchive reader)
         {
             SourceString = reader.ToFString();
-            SourceStringMetaData.Serialize(reader);
-            return reader;
+            SourceStringMetaData = new FLocMetadataObject(reader);
         }
     }
 }

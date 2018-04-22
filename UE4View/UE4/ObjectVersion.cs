@@ -9,6 +9,7 @@ namespace UE4View.UE4
 
         public enum EUnrealEngineObjectUE4Version
         {
+
             VER_UE4_OLDEST_LOADABLE_PACKAGE = 214,
 
             // Removed restriction on blueprint-exposed variables from being read-only
@@ -619,15 +620,21 @@ namespace UE4View.UE4
             VER_UE4_ADDED_SWEEP_WHILE_WALKING_FLAG,
             // StringAssetReference changed to SoftObjectPath and swapped to serialize as a name+string instead of a string
             VER_UE4_ADDED_SOFT_OBJECT_PATH,
+            // Changed the source orientation of point lights to match spot lights (z axis)
+            VER_UE4_POINTLIGHT_SOURCE_ORIENTATION,
+            // LocalizationId has been added to the package summary (editor-only)
+            VER_UE4_ADDED_PACKAGE_SUMMARY_LOCALIZATION_ID,
 
             // -----<new versions can be added before this line>-------------------------------------------------
             // - this needs to be the last line (see note below)
             VER_UE4_AUTOMATIC_VERSION_PLUS_ONE,
             VER_UE4_AUTOMATIC_VERSION = VER_UE4_AUTOMATIC_VERSION_PLUS_ONE - 1
+
+
+
         };
 
-
-        private static Dictionary<string, EUnrealEngineObjectUE4Version> versionDictionary = new Dictionary<string, EUnrealEngineObjectUE4Version>()
+    private static Dictionary<string, EUnrealEngineObjectUE4Version> versionDictionary = new Dictionary<string, EUnrealEngineObjectUE4Version>()
         {
             { "4.0", EUnrealEngineObjectUE4Version.VER_UE4_PRIVATE_REMOTE_ROLE },
             { "4.1", EUnrealEngineObjectUE4Version.VER_UE4_UNDO_BREAK_MATERIALATTRIBUTES_CHANGE },
@@ -639,15 +646,16 @@ namespace UE4View.UE4
             { "4.7", EUnrealEngineObjectUE4Version.VER_UE4_AFTER_MERGING_ADD_MODIFIERS_RUNTIME_GENERATION_TO_4_7 }, // in 4.7 that's VER_UE4_MOVEMENTCOMPONENT_UPDATEDSCENECOMPONENT
             { "4.8", EUnrealEngineObjectUE4Version.VER_UE4_SERIALIZE_BLUEPRINT_EVENTGRAPH_FASTCALLS_IN_UFUNCTION },
             { "4.9", EUnrealEngineObjectUE4Version.VER_UE4_APEX_CLOTH_TESSELLATION },
-            // { "4.10", EUnrealEngineObjectUE4Version.VER_UE4_APEX_CLOTH_TESSELLATION },
+            { "4.10", EUnrealEngineObjectUE4Version.VER_UE4_APEX_CLOTH_TESSELLATION },
             { "4.11", EUnrealEngineObjectUE4Version.VER_UE4_STREAMABLE_TEXTURE_MIN_MAX_DISTANCE },
             { "4.12", EUnrealEngineObjectUE4Version.VER_UE4_NAME_HASHES_SERIALIZED },
             { "4.13", EUnrealEngineObjectUE4Version.VER_UE4_INSTANCED_STEREO_UNIFORM_REFACTOR },
             { "4.14", EUnrealEngineObjectUE4Version.VER_UE4_TemplateIndex_IN_COOKED_EXPORTS },
             { "4.15", EUnrealEngineObjectUE4Version.VER_UE4_ADDED_SEARCHABLE_NAMES },
             { "4.16", EUnrealEngineObjectUE4Version.VER_UE4_ADDED_SWEEP_WHILE_WALKING_FLAG },
-            // { "4.17", EUnrealEngineObjectUE4Version.VER_UE4_ADDED_SWEEP_WHILE_WALKING_FLAG },
-            // { "4.18", EUnrealEngineObjectUE4Version.VER_UE4_ADDED_SOFT_OBJECT_PATH },
+            { "4.17", EUnrealEngineObjectUE4Version.VER_UE4_ADDED_SWEEP_WHILE_WALKING_FLAG },
+            { "4.18", EUnrealEngineObjectUE4Version.VER_UE4_ADDED_SOFT_OBJECT_PATH },
+            { "4.19", EUnrealEngineObjectUE4Version.VER_UE4_ADDED_PACKAGE_SUMMARY_LOCALIZATION_ID }
         };
     }
 }

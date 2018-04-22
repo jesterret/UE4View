@@ -7,5 +7,9 @@ namespace UE4View.UE4
     {
         public string ObjectName;
         public int OuterIndex;
+
+        public FObjectResource(FArchive reader) : base(reader)
+        {
+        }
     }
 }

@@ -8,13 +8,12 @@ namespace UE4View.UE4.NativeStructs
 {
     class Rotator : UStruct
     {
-        public override FArchive Serialize(FArchive reader, FPropertyTag tag)
+        public override void Serialize(FArchive reader, FPropertyTag tag)
         {
             var Pitch = reader.ToInt32();
             var Roll = reader.ToInt32();
             var Yaw = reader.ToInt32();
             Value = $"Rotator [Pitch={Pitch}, Roll={Roll}, Yaw={Yaw}]";
-            return reader;
         }
     }
 }

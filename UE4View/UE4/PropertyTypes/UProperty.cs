@@ -10,7 +10,7 @@ namespace UE4View.UE4.PropertyTypes
     [DebuggerDisplay("{Value}")]
     public abstract class UProperty
     {
-        public abstract FArchive Serialize(FArchive reader, FPropertyTag tag = null);
+        public abstract void Serialize(FArchive reader, FPropertyTag tag = null);
         
         public object Value { get; protected set; }
 

@@ -41,10 +41,10 @@ namespace UE4View.UE4.NativeStructs
         float LeaveTangent;
         float LeaveTangentWeight;
 
-        public override FArchive Serialize(FArchive reader, FPropertyTag tag)
+        public override void Serialize(FArchive reader, FPropertyTag tag)
         {
             if (reader.Version < (int)ObjectVersion.EUnrealEngineObjectUE4Version.VER_UE4_SERIALIZE_RICH_CURVE_KEY)
-                return reader;
+                return;
 
             InterpMode = reader.ToByte();
             TangentMode = reader.ToByte();
@@ -69,7 +69,6 @@ namespace UE4View.UE4.NativeStructs
                 sw.WriteLine("{0}: {1}", nameof(LeaveTangentWeight), LeaveTangentWeight);
                 base.Value = sw.ToString();
             }
-            return reader;
         }
     }
 }

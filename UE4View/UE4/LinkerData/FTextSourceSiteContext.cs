@@ -6,17 +6,16 @@
         public string SiteDescription;
         public bool IsEditorOnly;
         public bool IsOptional;
-        public FLocMetadataObject InfoMetaData = new FLocMetadataObject();
-        public FLocMetadataObject KeyMetaData = new FLocMetadataObject();
-        public override FArchive Serialize(FArchive reader)
+        public FLocMetadataObject InfoMetaData;
+        public FLocMetadataObject KeyMetaData;
+        public override void Serialize(FArchive reader)
         {
             KeyName = reader.ToFString();
             SiteDescription = reader.ToFString();
             IsEditorOnly = reader.ToBoolean();
             IsOptional = reader.ToBoolean();
-            InfoMetaData.Serialize(reader);
-            KeyMetaData.Serialize(reader);
-            return reader;
+            InfoMetaData = new FLocMetadataObject(reader);
+            KeyMetaData = new FLocMetadataObject(reader);
         }
     }
 }

@@ -7,6 +7,10 @@ namespace UE4View.UE4
 {
     public class FPackageFileSummary : USerializable
     {
+        public FPackageFileSummary(FArchive reader) : base(reader)
+        {
+        }
+
         const long PACKAGE_TAG_MAGIC = 0x9E2A83C1;
         const long PACKAGE_TAG_MAGIC_SWAPPED = 0xC1832A9E;
 
@@ -26,14 +30,14 @@ namespace UE4View.UE4
         public int ImportCount;
         public int ImportOffset;
         public int DependsOffset;
-        public int StringAssetReferencesCount;
-        public int StringAssetReferencesOffset;
+        public int SoftPackageReferencesCount;
+        public int SoftPackageReferencesOffset;
         public int SearchableNamesOffset;
         public int ThumbnailTableOffset;
         public Guid Guid;
         public List<FGenerationInfo> Generations = new List<FGenerationInfo>();
-        public FEngineVersion SavedByEngineVersion = new FEngineVersion();
-        public FEngineVersion CompatibleWithEngineVersion = new FEngineVersion();
+        public FEngineVersion SavedByEngineVersion;
+        public FEngineVersion CompatibleWithEngineVersion;
         public uint CompressionFlags;
         public uint PackageSource;
         // public TArray<FCompressedChunk> CompressedChunks;
@@ -43,17 +47,18 @@ namespace UE4View.UE4
         public int AssetRegistryDataOffset;
         public long BulkDataStartOffset;
         public int WorldTileInfoDataOffset;
+
         // public TArray<int> ChunkIDs;
 
-        public override FArchive Serialize(FArchive reader)
+        public override void Serialize(FArchive reader)
         {
             const long MinimumPackageSize = 32;
             if (reader.Length() < MinimumPackageSize)
-                return reader;
+                return;
 
             Tag = reader.ToUInt32();
             if (Tag != PACKAGE_TAG_MAGIC)
-                return reader;
+                return;
 
             const int CurrentLegacyFileVersion = -7;
             int LegacyFileVersion = reader.ToInt32();
@@ -63,7 +68,7 @@ namespace UE4View.UE4
                 {
                     FileVersionUE4 = 0;
                     FileVersionLicenseeUE4 = 0;
-                    return reader;
+                    return;
                 }
 
                 if (LegacyFileVersion != -4)
@@ -86,15 +91,14 @@ namespace UE4View.UE4
 
                 if (FileVersionUE4 == 0 && FileVersionLicenseeUE4 == 0 && reader.Version == 0)
                 {
-#if !DEBUG
+#if DEBUG
                     // no version information
                     var input = FarNet.Far.Api.CreateListMenu();
                     input.Title = "This file is unversioned, select version";
-                    input.Bottom = "Gaps mean no changes";
                     input.NoInfo = false;
                     input.ShowAmpersands = true;
 
-                    var values = ObjectVersion.VersionDictionary;
+                    var values = ObjectVersion.VersionDictionary.Reverse();
                     foreach (var name in values)
                         input.Add(name.Key);
 
@@ -112,19 +116,16 @@ namespace UE4View.UE4
                     bUnversioned = true;
                 }
                 else
-                {
                     FileVersionUE4 = reader.Version; // version read from config file
-                }
             }
             else
             {
                 FileVersionUE4 = FileVersionLicenseeUE4 = 0;
             }
+
             TotalHeaderSize = reader.ToInt32();
             FolderName = reader.ToFString();
             PackageFlags = reader.ToUInt32();
-
-            // PackageFlags modifications here, doesn't matter for me
 
             NameCount = reader.ToInt32();
             NameOffset = reader.ToInt32();
@@ -142,12 +143,12 @@ namespace UE4View.UE4
             DependsOffset = reader.ToInt32();
 
             if (FileVersionUE4 < (int)ObjectVersion.EUnrealEngineObjectUE4Version.VER_UE4_OLDEST_LOADABLE_PACKAGE)
-                return reader;
+                return;
 
             if (FileVersionUE4 >= (int)ObjectVersion.EUnrealEngineObjectUE4Version.VER_UE4_ADD_STRING_ASSET_REFERENCES_MAP)
             {
-                StringAssetReferencesCount = reader.ToInt32();
-                StringAssetReferencesOffset = reader.ToInt32();
+                SoftPackageReferencesCount = reader.ToInt32();
+                SoftPackageReferencesOffset = reader.ToInt32();
             }
             if (FileVersionUE4 >= (int)ObjectVersion.EUnrealEngineObjectUE4Version.VER_UE4_ADDED_SEARCHABLE_NAMES)
             {
@@ -160,21 +161,20 @@ namespace UE4View.UE4
             var GenerationCount = reader.ToInt32();
             foreach (var i in Enumerable.Range(0, GenerationCount))
             {
-                var gen = new FGenerationInfo();
-                gen.Serialize(reader);
+                var gen = new FGenerationInfo(reader);
                 Generations.Add(gen);
             }
 
             if (FileVersionUE4 >= (int)ObjectVersion.EUnrealEngineObjectUE4Version.VER_UE4_ENGINE_VERSION_OBJECT)
-                SavedByEngineVersion.Serialize(reader);
+                SavedByEngineVersion = new FEngineVersion(reader);
             else
             {
                 var EngineChangelist = reader.ToUInt32();
-                SavedByEngineVersion.Set(4, 0, 0, EngineChangelist, string.Empty);
+                SavedByEngineVersion = new FEngineVersion(4, 0, 0, EngineChangelist, string.Empty);
             }
 
             if (FileVersionUE4 >= (int)ObjectVersion.EUnrealEngineObjectUE4Version.VER_UE4_PACKAGE_SUMMARY_HAS_COMPATIBLE_ENGINE_VERSION)
-                CompatibleWithEngineVersion.Serialize(reader);
+                CompatibleWithEngineVersion = new FEngineVersion(reader);
             else
                 CompatibleWithEngineVersion = SavedByEngineVersion;
 
@@ -182,7 +182,7 @@ namespace UE4View.UE4
 
             var CompressedChunks = reader.ToInt32();
             if (CompressedChunks != 0)
-                return reader;
+                return;
 
             PackageSource = reader.ToUInt32();
 
@@ -192,7 +192,7 @@ namespace UE4View.UE4
             {
                 var NumTextureAllocations = reader.ToInt32();
                 if (NumTextureAllocations != 0) // Not supported
-                    return reader;
+                    return;
             }
 
             AssetRegistryDataOffset = reader.ToInt32();
@@ -222,7 +222,6 @@ namespace UE4View.UE4
             //    Sum.PreloadDependencyCount = -1;
             //    Sum.PreloadDependencyOffset = 0;
             //}
-            return reader;
         }
     }
 }

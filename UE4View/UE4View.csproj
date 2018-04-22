@@ -55,8 +55,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssetResolver.cs" />
     <Compile Include="Extensions.cs" />
+    <Compile Include="TrackCommand.cs" />
     <Compile Include="UE4\FPropertyTag.cs" />
+    <Compile Include="UE4\FString.cs" />
     <Compile Include="UE4\LinkerData\FObjectResource.cs" />
     <Compile Include="UE4\Localization\FEntry.cs" />
     <Compile Include="UE4\Localization\LocalizationManager.cs" />
@@ -84,6 +87,7 @@
     <Compile Include="UE4\PropertyTypes\TextProperty.cs" />
     <Compile Include="UE4\PropertyTypes\UProperty.cs" />
     <Compile Include="UE4\UAsset\ExportTypes.cs" />
+    <Compile Include="UE4\UAsset\Export\UObject.cs" />
     <Compile Include="UE4\UAsset\Export\UDataTable.cs" />
     <Compile Include="UE4\VorbisBank\BankExplorer.cs" />
     <Compile Include="UE4\VorbisBank\BankFile.cs" />

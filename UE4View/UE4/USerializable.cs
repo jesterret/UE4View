@@ -2,6 +2,8 @@
 {
     public abstract class USerializable
     {
-        public abstract FArchive Serialize(FArchive reader);
+        public USerializable() { }
+        protected USerializable(FArchive reader) => Serialize(reader);
+        public abstract void Serialize(FArchive reader);
     }
 }

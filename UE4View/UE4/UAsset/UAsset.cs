@@ -15,7 +15,7 @@ namespace UE4View.UE4.UAsset
         protected List<FObjectExport> ExportMap;
         protected List<FObjectImport> ImportMap;
         List<FGatherableTextData> GatherableTextDataMap;
-        List<string> StringAssetReferences;
+        List<FString> StringAssetReferences;
 
         public FObjectResource ImpExp(int Index)
         {
@@ -32,39 +32,25 @@ namespace UE4View.UE4.UAsset
 
             Seek(Summary.NameOffset);
             foreach (var i in Enumerable.Range(0, Summary.NameCount))
-            {
-                var entry = new FNameEntrySerialized();
-                entry.Serialize(this);
-                NameMap.Add(entry.Name);
-            }
+                NameMap.Add(new FNameEntrySerialized(this).Name);
+
             Seek(Summary.GatherableTextDataOffset);
             foreach (var i in Enumerable.Range(0, Summary.GatherableTextDataCount))
             {
                 Debugger.Break();
                 // check whether it reads stuff properly
-                var gatherable = new FGatherableTextData();
-                gatherable.Serialize(this);
-                GatherableTextDataMap.Add(gatherable);
+                GatherableTextDataMap.Add(new FGatherableTextData(this));
             }
             Seek(Summary.ImportOffset);
             foreach (var i in Enumerable.Range(0, Summary.ImportCount))
-            {
-                var imp = new FObjectImport();
-                imp.Serialize(this);
-                ImportMap.Add(imp);
-            }
+                ImportMap.Add(new FObjectImport(this));
+
             Seek(Summary.ExportOffset);
             foreach (var i in Enumerable.Range(0, Summary.ExportCount))
-            {
-                var exp = new FObjectExport();
-                exp.Serialize(this);
-                ExportMap.Add(exp);
-            }
-            Seek(Summary.StringAssetReferencesOffset);
-            foreach (var i in Enumerable.Range(0, Summary.StringAssetReferencesCount))
-            {
-                StringAssetReferences.Add(ToFString());
-            }
+                ExportMap.Add(new FObjectExport(this));
+
+            Seek(Summary.SoftPackageReferencesOffset);
+            StringAssetReferences.AddRange(ToArray<FString>(Summary.SoftPackageReferencesCount));
 
             // TODO: Fixup imports & exports from indexes to names, match exports with exporter object
             foreach (var imp in ImportMap)
@@ -91,7 +77,7 @@ namespace UE4View.UE4.UAsset
             //    }
             //}
 
-            var ExportInfo = ExportMap.Where(ex => ex.bIsAsset).SingleOrDefault();
+            var ExportInfo = GetAsset();
             if (ExportInfo != null)
             {
                 Seek((int)ExportInfo.SerialOffset);
@@ -104,7 +90,7 @@ namespace UE4View.UE4.UAsset
                         if (nativeSize > 0)
                         {
                             wr.WriteLine("Found {0} bytes of native data.", nativeSize);
-                            wr.Write(BitConverter.ToString(ToByteArray((int)nativeSize)));
+                            wr.Write(BitConverter.ToString(ToByteArray((int)nativeSize)).Replace("-", string.Empty));
                         }
                     }
                     catch
@@ -121,14 +107,13 @@ namespace UE4View.UE4.UAsset
 
         private void ReadSummary()
         {
-            Summary = new FPackageFileSummary();
-            Summary.Serialize(this);
+            Summary = new FPackageFileSummary(this);
             Version = Summary.FileVersionUE4;
             NameMap = new List<string>(Summary.NameCount);
             ExportMap = new List<FObjectExport>(Summary.ExportCount);
             ImportMap = new List<FObjectImport>(Summary.ImportCount);
             GatherableTextDataMap = new List<FGatherableTextData>(Summary.GatherableTextDataCount);
-            StringAssetReferences = new List<string>(Summary.StringAssetReferencesCount);
+            StringAssetReferences = new List<FString>(Summary.SoftPackageReferencesCount);
         }
 
         public override string ToName()
@@ -141,6 +126,18 @@ namespace UE4View.UE4.UAsset
             }
 
             throw new ArgumentOutOfRangeException(nameof(NameIndex));
+        }
+
+        public FObjectExport GetAsset()
+        {
+            return ExportMap.Where(ex => ex.bIsAsset).SingleOrDefault();
+        }
+
+        public FObjectExport GetCode()
+        {
+            var asset = GetAsset();
+            var code = ExportMap.Where(exp => exp.ObjectName == asset.ObjectName + "_C").SingleOrDefault();
+            return code;
         }
     }
 }

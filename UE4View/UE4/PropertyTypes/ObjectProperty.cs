@@ -24,7 +24,7 @@ namespace UE4View.UE4.PropertyTypes
                 }
             }
         }
-        public override FArchive Serialize(FArchive reader, FPropertyTag tag = null)
+        public override void Serialize(FArchive reader, FPropertyTag tag = null)
         {
             var index = reader.ToInt32();
             if (reader is UAsset.UAsset asset)
@@ -47,8 +47,7 @@ namespace UE4View.UE4.PropertyTypes
             }
             else
                 Value = index;
-
-            return reader;
+            
         }
     }
 }

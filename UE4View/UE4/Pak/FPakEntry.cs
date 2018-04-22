@@ -1,9 +1,13 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace UE4View.UE4.Pak
 {
     public class FPakEntry : USerializable
     {
+        public FPakEntry(FArchive reader) : base(reader)
+        {
+        }
         public enum ECompressionFlags
         {
             /** No compression																*/
@@ -22,11 +26,10 @@ namespace UE4View.UE4.Pak
             public long CompressionStart;
             public long CompressionEnd;
 
-            public override FArchive Serialize(FArchive reader)
+            public override void Serialize(FArchive reader)
             {
                 CompressionStart = reader.ToInt64();
                 CompressionEnd = reader.ToInt64();
-                return reader;
             }
         }
         /** Offset into pak file where the file is stored.*/
@@ -65,7 +68,7 @@ namespace UE4View.UE4.Pak
             return SerializedSize;
         }
 
-        public override FArchive Serialize(FArchive reader)
+        public override void Serialize(FArchive reader)
         {
             Offset = reader.ToInt64() + GetSerializedSize(reader.Version); // Offset + PakHeader -> OffsetInPak
             Size = reader.ToInt64();
@@ -84,7 +87,11 @@ namespace UE4View.UE4.Pak
                 Encrypted = reader.ToByte();
                 CompressionBlockSize = reader.ToUInt32();
             }
-            return reader;
+        }
+
+        public string GetSha1()
+        {
+            return string.Join(string.Empty, Hash.Select(b => b.ToString("x2")).ToArray());
         }
     }
 }

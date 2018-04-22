@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using UE4View.UE4.UAsset;
 
 namespace UE4View.UE4
 {
@@ -10,7 +11,12 @@ namespace UE4View.UE4
         public object XObject;
         public object SourceLinker;
         public int SourceIndex;
-        public override FArchive Serialize(FArchive reader)
+
+        public FObjectImport(FArchive reader) : base(reader)
+        {
+        }
+
+        public override void Serialize(FArchive reader)
         {
             ClassPackage = reader.ToName();
             ClassName = reader.ToName();
@@ -19,7 +25,6 @@ namespace UE4View.UE4
 
             XObject = SourceLinker = null;
             SourceIndex = 0;
-            return reader;
         }
     }
 }

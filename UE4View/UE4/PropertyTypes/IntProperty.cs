@@ -8,10 +8,9 @@ namespace UE4View.UE4.PropertyTypes
 {
     class IntProperty : UProperty
     {
-        public override FArchive Serialize(FArchive reader, FPropertyTag tag = null)
+        public override void Serialize(FArchive reader, FPropertyTag tag = null)
         {
             Value = reader.ToInt32();
-            return reader;
         }
     }
 }

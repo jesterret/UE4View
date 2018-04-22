@@ -9,7 +9,7 @@ namespace UE4View.UE4.PropertyTypes
 {
     class StructProperty : UProperty
     {
-        public override FArchive Serialize(FArchive reader, FPropertyTag tag = null)
+        public override void Serialize(FArchive reader, FPropertyTag tag = null)
         {
             if (NativeStructs.UStruct.Structures.Where(t => t.Key == tag.StructName).Select(t => t.Value).SingleOrDefault() is Type StructType)
             {
@@ -34,7 +34,6 @@ namespace UE4View.UE4.PropertyTypes
                     Value = wr.ToString().Replace(Environment.NewLine, Environment.NewLine + "\t");
                 }
             }
-            return reader;
         }
     }
 }

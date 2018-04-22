@@ -14,24 +14,22 @@ namespace UE4View
 {
     public class PakExplorer : Explorer
     {
-        public static FPakFile InspectedFile;
-        Panel PakViewPanel;
-
-        Explorer Parent = null;
+        public static FPakFile _internalPakFile;
+        Explorer _parent = null;
         List<FarFile> _files = new List<FarFile>();
 
-        public PakExplorer(FPakFile Pak) : this(null, Pak.Index, Pak.OriginalFileName)
+        public PakExplorer(FPakFile pak) : this(null, pak.Index, pak.OriginalFileName)
         {
-            InspectedFile = Pak;
+            _internalPakFile = pak;
             //new UE4.Localization.LocalizationManager(Pak.ReadEntryByName("/*/Content/Localization/Game/en/*.locres"));
         }
-        PakExplorer(Explorer Parent, FFileIndex Index, string Loc) : this(Parent, Loc)
+        PakExplorer(Explorer parent, FFileIndex index, string location) : this(parent, location)
         {
-            Task.Run(() => ParseFileIndex(Index));
+            Task.Run(() => ParseFileIndex(index));
         }
         PakExplorer(Explorer parent, string location) : this()
         {
-            Parent = parent;
+            _parent = parent;
             Location = Path.Combine(parent?.Location ?? string.Empty, location);
         }
         PakExplorer() : base(new Guid("dc1d3a1f-22da-4aae-954b-cf07f971cf01"))
@@ -45,8 +43,8 @@ namespace UE4View
 
         public override Explorer ExploreRoot(ExploreRootEventArgs args)
         {
-            var exp = this.Parent as PakExplorer;
-            while(exp != null && exp.Parent is PakExplorer Parent)
+            var exp = this._parent as PakExplorer;
+            while(exp != null && exp._parent is PakExplorer Parent)
                 exp = Parent;
 
             return exp;
@@ -55,7 +53,7 @@ namespace UE4View
         public override void GetContent(GetContentEventArgs args)
         {
             var filedata = args.File.Data ?? GetFileData(args.File);
-            var data = InspectedFile.ReadEntry(filedata);
+            var data = _internalPakFile.ReadEntry(filedata);
             File.WriteAllBytes(args.FileName, data ?? new byte[0]);
         }
 
@@ -63,35 +61,35 @@ namespace UE4View
         {
             var filedata = args.File.Data ?? GetFileData(args.File);
             var filename = args.File.Name;
-            if (filename.EndsWith(".bnk") && filedata is FPakEntry entry)
+            if (filedata is FPakEntry entry)
             {
-                var data = InspectedFile.ReadEntry(entry);
-                var bankinfo = _files.Where(f => f.Name == "SoundbanksInfo.xml").SingleOrDefault();
-                if (bankinfo != null)
+                var data = _internalPakFile.ReadEntry(entry);
+                if (filename.EndsWith(".bnk"))
                 {
-                    var bankData = InspectedFile.ReadEntry(bankinfo.Data);
-                    var doc = new XmlDocument();
-                    var xml = Encoding.UTF8.GetString(bankData);
-                    doc.LoadXml(xml);
-                    var info = new SoundBankInfo(doc);
-                    return new UE4.VorbisBank.BankExplorer(new UE4.VorbisBank.BankFile(data, info));
+                    var bankinfo = GetFileData("SoundbanksInfo.xml");
+                    if (bankinfo != null)
+                    {
+                        var bankData = _internalPakFile.ReadEntry(bankinfo);
+                        var doc = new XmlDocument();
+                        var xml = Encoding.UTF8.GetString(bankData);
+                        doc.LoadXml(xml);
+                        var info = new SoundBankInfo(doc);
+                        return new UE4.VorbisBank.BankExplorer(new UE4.VorbisBank.BankFile(data, info));
+                    }
+                    else
+                        return new UE4.VorbisBank.BankExplorer(new UE4.VorbisBank.BankFile(data));
                 }
-                else
-                    return new UE4.VorbisBank.BankExplorer(new UE4.VorbisBank.BankFile(data));
-            }
-            else if (filename.EndsWith(".uasset") && filedata is FPakEntry asset)
-            {
-                var uexps = Path.GetFileNameWithoutExtension(filename) + ".uexp";
-                var data = InspectedFile.ReadEntry(filedata);
-                var expData = GetFileData(uexps);
-                if (expData != null)
-                    data = data.Concat(InspectedFile.ReadEntry(expData)).ToArray();
+                else if (filename.EndsWith(".uasset") )
+                {
+                    var uexps = Path.GetFileNameWithoutExtension(filename) + ".uexp";
+                    var expData = GetFileData(uexps);
+                    if (expData != null)
+                        data = data.Concat(_internalPakFile.ReadEntry(expData)).ToArray();
 
-                new UAsset(data, GetCookedAssetVersion());
-                return null;
+                    new UAsset(data, GetCookedAssetVersion());
+                }
             }
-            else
-                return null;
+            return null;
         }
 
         public override Explorer ExploreLocation(ExploreLocationEventArgs args)
@@ -118,15 +116,15 @@ namespace UE4View
 
         public override Explorer ExploreParent(ExploreParentEventArgs args)
         {
-            if (Parent != null)
+            if (_parent != null)
                 args.PostData = this;
             else
             {
-                args.PostName = InspectedFile.OriginalFileName;
-                InspectedFile.Close();
-                PakViewPanel.Close();
+                args.PostName = _internalPakFile.OriginalFileName;
+                _internalPakFile.Close();
+                Far.Api.Panel.Close(); // Cleanup our panel after
             }
-            return Parent;
+            return _parent;
         }
 
         public override void ExportFiles(ExportFilesEventArgs args)
@@ -135,22 +133,16 @@ namespace UE4View
                 ExportFileEntry(file, Path.Combine(args.DirectoryName, file.Name));
         }
         
-        private void ParseFileIndex(FFileIndex Index)
+        private void ParseFileIndex(FFileIndex index)
         {
-            _files.AddRange(Index.Directories.Select(dir =>
+            _files.AddRange(index.Directories.Select(dir =>
                 new SetFile()
                 {
                     Name = dir.Key,
                     Data = new PakExplorer(this, dir.Value, dir.Key),
                     IsDirectory = true,
                 }));
-            _files.AddRange(Index.Files.Select(entry =>
-                new SetFile()
-                {
-                    Name = entry.Key,
-                    Data = entry.Value,
-                    Length = entry.Value.Size,
-                }));
+            _files.AddRange(index.Files);
 
             // Should never happen, but who knows...
             _files.ForEach(f =>
@@ -160,23 +152,23 @@ namespace UE4View
             });
         }
 
-        private void ExportFileEntry(FarFile file, string Dir)
+        private void ExportFileEntry(FarFile file, string dir)
         {
             var filedata = file.Data ?? GetFileData(file);
             if (file.IsDirectory)
             {
-                Directory.CreateDirectory(Dir);
+                Directory.CreateDirectory(dir);
                 if (filedata is PakExplorer index)
-                    index._files.ForEach(f => ExportFileEntry(f, Path.Combine(Dir, f.Name)));
+                    index._files.ForEach(f => ExportFileEntry(f, Path.Combine(dir, f.Name)));
             }
             else if (file.Name.EndsWith(".bnk") && filedata is FPakEntry entry)
             {
                 UE4.VorbisBank.BankFile bank = null;
-                var data = InspectedFile.ReadEntry(entry);
+                var data = _internalPakFile.ReadEntry(entry);
                 var bankinfo = _files.Where(f => f.Name == "SoundbanksInfo.xml").SingleOrDefault();
                 if (bankinfo != null)
                 {
-                    var bankData = InspectedFile.ReadEntry(bankinfo.Data);
+                    var bankData = _internalPakFile.ReadEntry(bankinfo.Data);
                     var doc = new XmlDocument();
                     var xml = Encoding.UTF8.GetString(bankData);
                     doc.LoadXml(xml);
@@ -186,22 +178,22 @@ namespace UE4View
                 else
                     bank = new UE4.VorbisBank.BankFile(data);
 
-                File.WriteAllBytes(Dir, data);
-                var folder = Path.Combine(Path.GetDirectoryName(Dir), Path.GetFileNameWithoutExtension(Dir));
+                File.WriteAllBytes(dir, data);
+                var folder = Path.Combine(Path.GetDirectoryName(dir), Path.GetFileNameWithoutExtension(dir));
                 Directory.CreateDirectory(folder);
                 bank.Files.ForEach(track => File.WriteAllBytes(Path.Combine(folder, track.Name), bank.ReadTrack(track)));
             }
             else
             {
-                var data = InspectedFile.ReadEntry(filedata);
+                var data = _internalPakFile.ReadEntry(filedata);
                 if (data != null)
-                    File.WriteAllBytes(Dir, data);
+                    File.WriteAllBytes(dir, data);
             }
         }
 
         private int GetCookedAssetVersion()
         {
-            var entry = InspectedFile.ReadEntryByName("*/CookedIniVersion.txt");
+            var entry = _internalPakFile.ReadEntryByName("*/CookedIniVersion.txt");
             if (entry != null)
             {
                 var content = Encoding.UTF8.GetString(entry).Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
@@ -214,26 +206,23 @@ namespace UE4View
 
         public override Panel CreatePanel()
         {
-            if (InspectedFile.IsValid())
-            {
-                PakViewPanel = new Panel(this)
+            if (_internalPakFile.IsPakMagic())
+                return new Panel(this)
                 {
-                    Title = InspectedFile.OriginalFileName,
+                    Title = _internalPakFile.OriginalFileName,
                     SortMode = PanelSortMode.Name,
                     ViewMode = PanelViewMode.Wide,
                     DotsMode = PanelDotsMode.Dots,
                     UseSortGroups = true,
                 };
-                return PakViewPanel;
-            }
             else
                 Far.Api.Message("Not an UE4 PAK file format");
 
             return null;
         }
-
+        
         private object GetFileData(FarFile file) => GetFileData(file.Name);
-        private object GetFileData(string name) => _files.Where(f => f.Name == name).Single().Data;
+        private object GetFileData(string name) => _files.Where(f => f.Name == name).SingleOrDefault()?.Data;
 
         public override IList<FarFile> GetFiles(GetFilesEventArgs args) => _files;
     }

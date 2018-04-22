@@ -1,4 +1,5 @@
 ﻿using System;
+using UE4View.UE4.UAsset;
 
 namespace UE4View.UE4
 {
@@ -22,7 +23,11 @@ namespace UE4View.UE4
         public int SerializationBeforeCreateDependencies;
         public int CreateBeforeCreateDependencies;
 
-        public override FArchive Serialize(FArchive reader)
+        public FObjectExport(FArchive reader) : base(reader)
+        {
+        }
+
+        public override void Serialize(FArchive reader)
         {
             ClassIndex = reader.ToInt32();
             SuperIndex = reader.ToInt32();
@@ -67,8 +72,7 @@ namespace UE4View.UE4
                 SerializationBeforeCreateDependencies = reader.ToInt32();
                 CreateBeforeCreateDependencies = reader.ToInt32();
             }
-
-            return reader;
+            
         }
     }
 }
