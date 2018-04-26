@@ -4,13 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace UE4View.UE4.NativeStructs
+namespace UE4View.UE4.Structures
 {
-    class Guid : UStruct
+    class Vector2D : UStruct
     {
         public override void Serialize(FArchive reader, FPropertyTag tag = null)
         {
-            Value = reader.ToGuid();
+            var x = reader.ToFloat();
+            var y = reader.ToFloat();
+            Value = $"Vector2D [X: {x}, Y: {y}]";
         }
     }
 }

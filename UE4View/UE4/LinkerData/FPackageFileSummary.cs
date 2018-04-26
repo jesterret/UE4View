@@ -91,7 +91,7 @@ namespace UE4View.UE4
 
                 if (FileVersionUE4 == 0 && FileVersionLicenseeUE4 == 0 && reader.Version == 0)
                 {
-#if DEBUG
+#if !DEBUG
                     // no version information
                     var input = FarNet.Far.Api.CreateListMenu();
                     input.Title = "This file is unversioned, select version";

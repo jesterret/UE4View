@@ -27,27 +27,6 @@ namespace UE4View.UE4
 
         public int PropertyStartOffset;
 
-        public static void WriteAll(FArchive source, TextWriter destination)
-        {
-            foreach (var prop in ReadToEnd(source))
-            {
-                destination.Write("{0}: ", prop.Name);
-                var PropValue = prop.ToProperty(source);
-                if (PropValue is ArrayPropertyBase array)
-                {
-                    destination.Write("[ ");
-                    foreach (var i in Enumerable.Range(0, array.Count))
-                    {
-                        destination.Write(array[i]);
-                        if (i < array.Count - 1)
-                            destination.Write(", ");
-                    }
-                    destination.WriteLine(" ]");
-                }
-                else
-                    destination.WriteLine(PropValue);
-            }
-        }
         public static IEnumerable<FPropertyTag> ReadToEnd(FArchive reader)
         {
             FPropertyTag tag = null;
@@ -116,9 +95,17 @@ namespace UE4View.UE4
                 }
             }
         }
+
+        private Type GetPropertyType()
+        {
+            if (PropertyTypes.Any(kv => kv.Key == Type))
+                return PropertyTypes.Single(kv => kv.Key == Type).Value;
+            else
+                return PropertyTypes.Where(t => t.Key.StartsWith(Type)).Select(t => t.Value).SingleOrDefault();
+        }
         public UProperty ToProperty(FArchive reader)
         {
-            if (PropertyTypes.Where(t => t.Key.StartsWith(Type)).Select(t => t.Value).SingleOrDefault() is Type type)
+            if (GetPropertyType() is Type type)
             {
                 if (type.ContainsGenericParameters)
                     type = type.MakeGenericType(PropertyTypes[InnerType]);

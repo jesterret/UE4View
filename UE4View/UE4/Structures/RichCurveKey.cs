@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace UE4View.UE4.NativeStructs
+namespace UE4View.UE4.Structures
 {
     class RichCurveKey : UStruct
     {

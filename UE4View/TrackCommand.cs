@@ -22,7 +22,7 @@ namespace UE4View
                 {
                     using (var summary = File.CreateText(Path.Combine(outDir, "summary.txt")))
                     {
-                        foreach (var file in reader.AbsoluteIndex.OrderBy(kv => kv.Key))
+                        foreach (var file in reader.AbsoluteIndex.OrderByDescending(kv => Path.GetExtension(kv.Key) == ".locres"))
                         {
                             AssetResolver.Exporter(outDir, file.Key, (string f) => reader.ReadData(f));
                             summary.WriteLine("{0} - sha1: {1}", PakReader.SplitPakName(file.Key).PakPath, file.Value.GetSha1());

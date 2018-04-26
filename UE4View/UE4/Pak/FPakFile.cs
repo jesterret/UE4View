@@ -45,7 +45,7 @@ namespace UE4View.UE4.Pak
 
                 return data;
             }
-            return null;
+            return new byte[0];
         }
 
         private void Initialize()
@@ -174,7 +174,7 @@ namespace UE4View.UE4.Pak
                 else
                     return UnpackEntry(entry);
             }
-            return null;
+            return new byte[0];
         }
 
         /// <summary>
@@ -192,7 +192,7 @@ namespace UE4View.UE4.Pak
             if (AbsoluteIndex.ContainsKey(name))
                 return ReadEntry(AbsoluteIndex[name]);
             else
-                return null;
+                return new byte[0];
         }
 
         private FPakEntry RecursiveSearch(string[] parts, in FFileIndex dir)

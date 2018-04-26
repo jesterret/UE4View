@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UE4View.UE4.UAsset.Export;
 
 namespace UE4View.UE4.PropertyTypes
 {
@@ -11,9 +13,9 @@ namespace UE4View.UE4.PropertyTypes
     {
         public override void Serialize(FArchive reader, FPropertyTag tag = null)
         {
-            if (NativeStructs.UStruct.Structures.Where(t => t.Key == tag.StructName).Select(t => t.Value).SingleOrDefault() is Type StructType)
+            if (Structures.UStruct.NativeTypes.Where(t => t.Key == tag.StructName).Select(t => t.Value).SingleOrDefault() is Type StructType)
             {
-                var obj = Activator.CreateInstance(StructType) as NativeStructs.UStruct;
+                var obj = Activator.CreateInstance(StructType) as Structures.UStruct;
                 obj.Serialize(reader, tag);
                 Value = "{ " + obj.Value.ToString().Replace(Environment.NewLine, Environment.NewLine + "\t") + " }";
             }
@@ -24,7 +26,8 @@ namespace UE4View.UE4.PropertyTypes
                     wr.WriteLine("{");
                     try
                     {
-                        FPropertyTag.WriteAll(reader, wr);
+                        using (var obj = new UObject(reader))
+                            obj.Read(wr);
                     }
                     catch
                     {

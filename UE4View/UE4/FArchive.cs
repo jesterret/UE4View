@@ -116,9 +116,7 @@ namespace UE4View.UE4
                     case 11: // case ETextHistoryType::StringTableEntry:
                         Debugger.Break();
                         break;
-
                     default:
-                        Debugger.Break();
                         break;
                 }
             }

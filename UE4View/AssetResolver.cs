@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
@@ -63,22 +64,20 @@ namespace UE4View
                 case ".uasset":
                     {
                         // check whether we can find a localization in this directory
-                        if (Directory.EnumerateFiles(FarNet.Far.Api.CurrentDirectory, "*.locres").FirstOrDefault() is string found)
-                            LocalizationManager.Load(File.ReadAllBytes(found));
+                        //if (Directory.EnumerateFiles(FarNet.Far.Api.CurrentDirectory, "*.locres").FirstOrDefault() is string found)
+                        //    LocalizationManager.Load(File.ReadAllBytes(found));
 
-                        var uexps = file.Replace(".uasset", ".uexp");
-                        try
-                        {
-                            data = data.Concat(getFileBytes(uexps)).ToArray();
-                        }
-                        catch (FileNotFoundException)
-                        {
-                        }
+                        //var uexps = file.Replace(".uasset", ".uexp");
+                        //try
+                        //{
+                        //    data = data.Concat(getFileBytes(uexps)).ToArray();
+                        //}
+                        //catch (FileNotFoundException)
+                        //{
+                        //}
 
-                        new UAsset(data);
-                        var table = new UE4.UAsset.Export.UDataTable(data);
-                        using (var db = File.CreateText(file + ".log"))
-                            table.ReadRows(db);
+                        //using (var db = File.CreateText(file + ".log"))
+                        //    new UAsset(data).GetObject().Read(db);
                     }
                     break;
 
@@ -97,8 +96,10 @@ namespace UE4View
             var ext = Path.GetExtension(pathFileName);
             switch(ext)
             {
+                case ".h":
                 case ".txt":
                 case ".ini":
+                case ".json":
                 case ".uplugin":
                 case ".uproject":
                 case ".upluginmanifest":
@@ -134,8 +135,30 @@ namespace UE4View
                     }
                     break;
                 case ".uasset":
-                    //Directory.CreateDirectory(outDir);
-                    // deserialize asset and dump info
+                    Directory.CreateDirectory(outDir);
+
+                    var data = getFileBytes(file);
+                    var uexps = file.Replace(".uasset", ".uexp");
+                    try
+                    {
+                        data = data.Concat(getFileBytes(uexps)).ToArray();
+                    }
+                    catch (FileNotFoundException)
+                    {
+                    }
+                    catch(ArgumentNullException)
+                    {
+                    }
+
+                    using (var asset = new UAsset(data))
+                    {
+                        using (var obj = asset.GetObject())
+                        {
+                            if (obj != null)
+                                using (var wr = File.CreateText(outFile))
+                                    obj.Read(wr);
+                        }
+                    }
                     break;
 
                 default: // skip anything else

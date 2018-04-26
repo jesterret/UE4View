@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using UE4View.UE4.UAsset.Export;
 
 namespace UE4View.UE4.UAsset
 {
@@ -20,9 +21,44 @@ namespace UE4View.UE4.UAsset
         public FObjectResource ImpExp(int Index)
         {
             if (Index >= 0)
-                return ExportMap[Index];
+            {
+                if (Index < ExportMap.Count)
+                    return ExportMap[Index];
+            }
             else
-                return ImportMap[-Index - 1];
+            {
+                var i = -Index - 1;
+                if (i < ImportMap.Count)
+                    return ImportMap[-Index - 1];
+            }
+            return null;
+        }
+
+        public UObject GetObject()
+        {
+            var asset = GetAsset();
+            if (asset == null)
+                return null;
+
+            var ObjectClass = ImpExp(asset.ClassIndex).ObjectName;            
+            Seek((int)asset.SerialOffset);
+
+            try
+            {
+                if (UObject.Classes.TryGetValue(ObjectClass, out Type type))
+                {
+                    var obj = Activator.CreateInstance(type, this) as UObject;
+                    //obj.Serialize(this);
+                    return obj;
+                }
+                else
+                    return new UObject(this);
+            }
+            catch
+            {
+                Debug.WriteLine(ObjectClass);
+                return null;
+            }
         }
 
         public UAsset(byte[] data, int version) : base(data)
@@ -77,28 +113,28 @@ namespace UE4View.UE4.UAsset
             //    }
             //}
 
-            var ExportInfo = GetAsset();
-            if (ExportInfo != null)
-            {
-                Seek((int)ExportInfo.SerialOffset);
-                using (var wr = File.CreateText(Path.Combine(Far.Api.CurrentDirectory, ExportInfo.ObjectName + ".log")))
-                {
-                    try
-                    {
-                        FPropertyTag.WriteAll(this, wr);
-                        var nativeSize = ExportInfo.SerialOffset + ExportInfo.SerialSize - Tell();
-                        if (nativeSize > 0)
-                        {
-                            wr.WriteLine("Found {0} bytes of native data.", nativeSize);
-                            wr.Write(BitConverter.ToString(ToByteArray((int)nativeSize)).Replace("-", string.Empty));
-                        }
-                    }
-                    catch
-                    {
-                        wr.Flush();
-                    }
-                }
-            }
+            //var ExportInfo = GetAsset();
+            //if (ExportInfo != null)
+            //{
+            //    Seek((int)ExportInfo.SerialOffset);
+            //    using (var wr = File.CreateText(Path.Combine(Far.Api.CurrentDirectory, ExportInfo.ObjectName + ".log")))
+            //    {
+            //        try
+            //        {
+            //            FPropertyTag.WriteAll(this, wr);
+            //            var nativeSize = ExportInfo.SerialOffset + ExportInfo.SerialSize - Tell();
+            //            if (nativeSize > 0)
+            //            {
+            //                wr.WriteLine("Found {0} bytes of native data.", nativeSize);
+            //                wr.Write(BitConverter.ToString(ToByteArray((int)nativeSize)).Replace("-", string.Empty));
+            //            }
+            //        }
+            //        catch
+            //        {
+            //            wr.Flush();
+            //        }
+            //    }
+            //}
         }
 
         public UAsset(byte[] data) : this(data, 0)
@@ -130,7 +166,8 @@ namespace UE4View.UE4.UAsset
 
         public FObjectExport GetAsset()
         {
-            return ExportMap.Where(ex => ex.bIsAsset).SingleOrDefault();
+            return ExportMap.Where(ex => (ex.ObjectFlags & FObjectExport.EObjectFlags.RF_Standalone) == FObjectExport.EObjectFlags.RF_Standalone).SingleOrDefault();
+            //return ExportMap.Where(ex => ex.bIsAsset).SingleOrDefault();
         }
 
         public FObjectExport GetCode()
