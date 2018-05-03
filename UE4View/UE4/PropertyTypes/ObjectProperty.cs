@@ -30,7 +30,6 @@ namespace UE4View.UE4.PropertyTypes
         public override void Serialize(FArchive reader, FPropertyTag tag = null)
         {
             var index = reader.ToInt32();
-            Value = index;
             if (reader is UAsset.UAsset asset)
             {
                 var resource = asset.ImpExp(index);
@@ -42,7 +41,7 @@ namespace UE4View.UE4.PropertyTypes
                     else
                     {
                         // Preventing recursive deserialization by marking asset as WIP
-                        if ((exp.ObjectFlags & FObjectExport.EObjectFlags.RF_WillBeLoaded) != FObjectExport.EObjectFlags.RF_WillBeLoaded)
+                        if (!exp.ObjectFlags.HasFlag(FObjectExport.EObjectFlags.RF_WillBeLoaded))
                         {
                             exp.ObjectFlags |= FObjectExport.EObjectFlags.RF_WillBeLoaded;
                             reader.Seek((int)exp.SerialOffset);
@@ -54,6 +53,8 @@ namespace UE4View.UE4.PropertyTypes
                 }
                 else if (resource is FObjectImport imp)
                     Value = imp.XObject;
+                else
+                    Value = index;
             }
             
         }

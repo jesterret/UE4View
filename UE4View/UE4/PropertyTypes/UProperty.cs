@@ -14,6 +14,8 @@ namespace UE4View.UE4.PropertyTypes
         
         public object Value { get; protected set; }
 
-        public override string ToString() => Value.ToString();
+        public override string ToString() => Value?.ToString();
+
+        public static Dictionary<string, Type> PropertyTypes { get; } = typeof(UProperty).Assembly.GetTypes().Where(t => !t.IsAbstract && t.IsSubclassOf(typeof(UProperty))).ToDictionary(t => t.Name);
     }
 }

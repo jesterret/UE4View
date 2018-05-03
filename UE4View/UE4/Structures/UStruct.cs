@@ -9,10 +9,9 @@ namespace UE4View.UE4.Structures
     [DebuggerDisplay("{Value}")]
     public class UStruct
     {
-        
         public virtual void Serialize(FArchive reader, FPropertyTag tag = null)
         {
-            reader.Skip(tag.Size);
+            reader.Seek((int)tag.PropertyEnd);
             Value = "[Skipped]";
         }
 

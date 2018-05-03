@@ -149,10 +149,9 @@ namespace UE4View.UE4.Pak
         public bool CanDecrypt() => IsEncrypted() && GetDecryptionKey() != null;
         // TODO: Make this into a dictionary 
         private string GetDecryptionKey() =>
-            //"e3VqgSMhuaPw75fm0PdGZCN3ASwpVOk5Ij7iLf8VOEdqGL6aw05JeX0RHMgBvypd" // Darwin
-            //"y298qjSb115NqQ3Agad30DWn2QYrTI8CT6aP05l2PBV9Qe92S94PdoVCCy06A38L" // Fortnite
-            "\x71\x29\xD5\xE5\x78\xF0\xDC\x38\x21\xE3\xCD\x70\x4F\x01\xE5\x11\xF9\xA6\x03\x40\xCF\x5B\x4C\x85\x0F\x3B\x0B\x6B\x5E\x80\xD0\xB9"
-            //"\xE5\xD5\x29\x71\x38\xDC\xF0\x78\x70\xCD\xE3\x21\x11\xE5\x01\x4F\x40\x03\xA6\xF9\x85\x4C\x5B\xCF\x6B\x0B\x3B\x0F\xB9\xD0\x80\x5E"
+            "27C5900B1F371AA94E10DFD3498D7AEA49DE541B11F5E4A7B55CEE3132931F1D" // Darwin
+            //FarNet.Far.Api.Input("Enter AES Encryption Key")
+            //"\x71\x29\xD5\xE5\x78\xF0\xDC\x38\x21\xE3\xCD\x70\x4F\x01\xE5\x11\xF9\xA6\x03\x40\xCF\x5B\x4C\x85\x0F\x3B\x0B\x6B\x5E\x80\xD0\xB9"
             //null
             ;
 

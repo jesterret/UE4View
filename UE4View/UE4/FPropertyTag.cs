@@ -26,6 +26,8 @@ namespace UE4View.UE4
         public Guid PropertyGuid;
 
         public int PropertyStartOffset;
+        public long PropertyEnd;
+        public bool IsNative = false;
 
         public static IEnumerable<FPropertyTag> ReadToEnd(FArchive reader)
         {
@@ -94,21 +96,23 @@ namespace UE4View.UE4
                     PropertyGuid = reader.ToGuid();
                 }
             }
+
+            PropertyEnd = reader.Tell() + Size;
         }
 
         private Type GetPropertyType()
         {
-            if (PropertyTypes.Any(kv => kv.Key == Type))
-                return PropertyTypes.Single(kv => kv.Key == Type).Value;
+            if (UProperty.PropertyTypes.Any(kv => kv.Key == Type))
+                return UProperty.PropertyTypes.Single(kv => kv.Key == Type).Value;
             else
-                return PropertyTypes.Where(t => t.Key.StartsWith(Type)).Select(t => t.Value).SingleOrDefault();
+                return UProperty.PropertyTypes.Where(t => t.Key.StartsWith(Type)).Select(t => t.Value).SingleOrDefault();
         }
         public UProperty ToProperty(FArchive reader)
         {
             if (GetPropertyType() is Type type)
             {
                 if (type.ContainsGenericParameters)
-                    type = type.MakeGenericType(PropertyTypes[InnerType]);
+                    type = type.MakeGenericType(UProperty.PropertyTypes[InnerType]);
 
                 var prop = Activator.CreateInstance(type) as UProperty;
                 prop.Serialize(reader, this);
@@ -117,7 +121,5 @@ namespace UE4View.UE4
             else
                 throw new ArgumentException($"Unknown type \"{Type}\", implement handling for that shit.");
         }
-
-        private static Dictionary<string, Type> PropertyTypes { get; } = typeof(PropertyTypes.UProperty).Assembly.GetTypes().Where(t => !t.IsAbstract && t.IsSubclassOf(typeof(PropertyTypes.UProperty))).ToDictionary(t => t.Name);
     }
 }

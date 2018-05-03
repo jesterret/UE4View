@@ -9,28 +9,6 @@ namespace UE4View.UE4.Structures
 {
     class RichCurveKey : UStruct
     {
-        //bool FRichCurveKey::Serialize(FArchive& Ar)
-        //{
-        //    if (Ar.UE4Ver() < VER_UE4_SERIALIZE_RICH_CURVE_KEY)
-        //    {
-        //        return false;
-        //    }
-
-        //    // Serialization is handled manually to avoid the extra size overhead of UProperty tagging.
-        //    // Otherwise with many keys in a rich curve the size can become quite large.
-        //    Ar << InterpMode;
-        //    Ar << TangentMode;
-        //    Ar << TangentWeightMode;
-        //    Ar << Time;
-        //    Ar << Value;
-        //    Ar << ArriveTangent;
-        //    Ar << ArriveTangentWeight;
-        //    Ar << LeaveTangent;
-        //    Ar << LeaveTangentWeight;
-
-        //    return true;
-        //}
-
         byte InterpMode;
         byte TangentMode;
         byte TangentWeightMode;

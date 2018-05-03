@@ -6,13 +6,11 @@ using System.Threading.Tasks;
 
 namespace UE4View.UE4.Structures
 {
-    class Vector2D : UStruct
+    class MaterialAttributesInput : MaterialInput
     {
         public override void Serialize(FArchive reader, FPropertyTag tag = null)
         {
-            var x = reader.ToFloat();
-            var y = reader.ToFloat();
-            Value = $"Vector2D [X={x}, Y={y}]";
+            base.Serialize(reader, tag);
         }
     }
 }

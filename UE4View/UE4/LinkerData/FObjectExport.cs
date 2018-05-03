@@ -40,6 +40,7 @@ namespace UE4View.UE4
 
         public int ClassIndex;
         public int SuperIndex;
+        public int TemplateIndex;
         public EObjectFlags ObjectFlags;
         public long SerialSize;
         public long SerialOffset;
@@ -66,9 +67,8 @@ namespace UE4View.UE4
             SuperIndex = reader.ToInt32();
 
             if (reader.Version >= (int)ObjectVersion.EUnrealEngineObjectUE4Version.VER_UE4_TemplateIndex_IN_COOKED_EXPORTS)
-            {
-                var TemplateIndex = reader.ToInt32();
-            }
+                TemplateIndex = reader.ToInt32();
+
             OuterIndex = reader.ToInt32();
             ObjectName = reader.ToName();
 

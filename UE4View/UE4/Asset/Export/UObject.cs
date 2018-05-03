@@ -10,16 +10,14 @@ namespace UE4View.UE4.UAsset.Export
 {
     public class UObject : IDisposable
     {
-        protected List<KeyValuePair<string, UProperty>> TaggedVars { get; } = new List<KeyValuePair<string, UProperty>>();
+        protected List<KeyValuePair<string, object>> TaggedVars { get; } = new List<KeyValuePair<string, object>>();
         public UObject() { }
         public UObject(FArchive reader) => Serialize(reader);
 
         public virtual void Serialize(FArchive reader)
         {
             foreach (var prop in FPropertyTag.ReadToEnd(reader))
-            {
-                TaggedVars.Add(new KeyValuePair<string, UProperty>(prop.Name, prop.ToProperty(reader)));
-            }
+                AddVar(prop.Name, prop.ToProperty(reader));
         }
 
         public virtual void Read(TextWriter wr)
@@ -31,7 +29,12 @@ namespace UE4View.UE4.UAsset.Export
             }
         }
 
-        protected void WriteProperty(TextWriter wr, UProperty prop)
+        public void AddVar(string name, object prop)
+        {
+            TaggedVars.Add(new KeyValuePair<string, object>(name, prop));
+        }
+
+        protected void WriteProperty(TextWriter wr, object prop)
         {
             if (prop is ArrayPropertyBase array)
             {
@@ -47,6 +50,18 @@ namespace UE4View.UE4.UAsset.Export
             }
             else
                 wr.WriteLine(prop);
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            using (var sw = new StringWriter(sb))
+            {
+                sw.WriteLine("{{ ");
+                Read(sw);
+                sw.WriteLine(" }}");
+            }
+            return sb.ToString();
         }
 
         public void Dispose()

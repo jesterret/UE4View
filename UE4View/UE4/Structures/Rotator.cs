@@ -10,9 +10,9 @@ namespace UE4View.UE4.Structures
     {
         public override void Serialize(FArchive reader, FPropertyTag tag)
         {
-            var Pitch = reader.ToInt32();
-            var Roll = reader.ToInt32();
-            var Yaw = reader.ToInt32();
+            var Pitch = reader.ToFloat();
+            var Roll = reader.ToFloat();
+            var Yaw = reader.ToFloat();
             Value = $"Rotator [Pitch={Pitch}, Roll={Roll}, Yaw={Yaw}]";
         }
     }

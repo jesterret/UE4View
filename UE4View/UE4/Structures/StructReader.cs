@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace UE4View.UE4.Structures
 {
-    class SmartName : UStruct
+    static class StructReader
     {
-        public override void Serialize(FArchive reader, FPropertyTag tag = null)
+        public static object Read(FArchive reader, UStruct str)
         {
-            Value = reader.ToName();
-            var UID = reader.ToInt16();
+            str.Serialize(reader);
+            return str.Value;
         }
     }
 }

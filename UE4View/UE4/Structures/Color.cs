@@ -14,7 +14,7 @@ namespace UE4View.UE4.Structures
             var g = reader.ToByte();
             var b = reader.ToByte();
             var a = reader.ToByte();
-            Value = $"Color [A={a}, R={r}, G={g}, B={b}"; ;
+            Value = $"Color [A={a}, R={r}, G={g}, B={b}]";
         }
     }
 }

@@ -23,7 +23,7 @@ namespace UE4View.UE4
         }
         public virtual string ToName()
         {
-            return "INDEX_NONE";
+            return "None";
         }
         public string ToFString()
         {

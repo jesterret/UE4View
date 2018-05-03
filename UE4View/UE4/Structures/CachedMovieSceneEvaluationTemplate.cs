@@ -4,12 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace UE4View.UE4.UAsset.Export
+namespace UE4View.UE4.Structures
 {
-    class AnimMontage : UObject
+    class CachedMovieSceneEvaluationTemplate : UStruct
     {
-        public AnimMontage(UAsset reader)
-        {
-        }
     }
 }

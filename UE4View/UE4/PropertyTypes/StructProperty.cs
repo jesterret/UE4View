@@ -19,8 +19,13 @@ namespace UE4View.UE4.PropertyTypes
                 obj.Serialize(reader, tag);
                 Value = "{ " + obj.Value.ToString().Replace(Environment.NewLine, Environment.NewLine + "\t") + " }";
             }
-            else
+            else if (tag.Size < 8)
             {
+                // TODO: Fix
+                reader.Skip(tag.Size);
+            }
+            else
+            { 
                 using (var wr = new StringWriter())
                 {
                     wr.WriteLine("{");
@@ -32,6 +37,7 @@ namespace UE4View.UE4.PropertyTypes
                     catch
                     {
                         wr.WriteLine("Structure {0} is expected to have a native deserialization", tag.StructName);
+                        reader.Seek((int)tag.PropertyEnd);
                     }
                     wr.Write("}");
                     Value = wr.ToString().Replace(Environment.NewLine, Environment.NewLine + "\t");

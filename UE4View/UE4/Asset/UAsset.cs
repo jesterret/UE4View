@@ -47,8 +47,8 @@ namespace UE4View.UE4.UAsset
             {
                 if (UObject.Classes.TryGetValue(ObjectClass, out Type type))
                 {
-                    var obj = Activator.CreateInstance(type, this) as UObject;
-                    //obj.Serialize(this);
+                    var obj = Activator.CreateInstance(type) as UObject;
+                    obj.Serialize(this);
                     return obj;
                 }
                 else
@@ -96,45 +96,6 @@ namespace UE4View.UE4.UAsset
                 else
                     imp.XObject = string.Format("{0} {1}.{2}", imp.ClassName, ImpExp(imp.OuterIndex).ObjectName, imp.ObjectName);
             }
-            //var ufunc = ExportMap.Where(exp => ImpExp(exp.ClassIndex).ObjectName == "Function").ToArray();
-            //foreach(var func in ufunc)
-            //{
-            //    Seek((int)func.SerialOffset);
-            //    var tags = FPropertyTag.ReadToEnd(this).ToArray();
-            //    if(tags.Length > 0)
-            //    {
-            //        Debugger.Break();
-            //    }
-            //    var FunctionFlags = ToUInt32();
-            //    if(Version >= (int)ObjectVersion.EUnrealEngineObjectUE4Version.VER_UE4_SERIALIZE_BLUEPRINT_EVENTGRAPH_FASTCALLS_IN_UFUNCTION)
-            //    {
-            //        var test = FPropertyTag.ReadToEnd(this).ToArray();
-            //        return;
-            //    }
-            //}
-
-            //var ExportInfo = GetAsset();
-            //if (ExportInfo != null)
-            //{
-            //    Seek((int)ExportInfo.SerialOffset);
-            //    using (var wr = File.CreateText(Path.Combine(Far.Api.CurrentDirectory, ExportInfo.ObjectName + ".log")))
-            //    {
-            //        try
-            //        {
-            //            FPropertyTag.WriteAll(this, wr);
-            //            var nativeSize = ExportInfo.SerialOffset + ExportInfo.SerialSize - Tell();
-            //            if (nativeSize > 0)
-            //            {
-            //                wr.WriteLine("Found {0} bytes of native data.", nativeSize);
-            //                wr.Write(BitConverter.ToString(ToByteArray((int)nativeSize)).Replace("-", string.Empty));
-            //            }
-            //        }
-            //        catch
-            //        {
-            //            wr.Flush();
-            //        }
-            //    }
-            //}
         }
 
         public UAsset(byte[] data) : this(data, 0)
@@ -155,19 +116,23 @@ namespace UE4View.UE4.UAsset
         public override string ToName()
         {
             var NameIndex = ToInt32();
+            var Number = ToInt32();
             if (NameMap.Count > NameIndex && NameIndex >= 0)
             {
-                var Number = ToInt32();
                 return NameMap[NameIndex];
             }
+            if (NameIndex == -1)
+                return base.ToName();
 
             throw new ArgumentOutOfRangeException(nameof(NameIndex));
         }
 
         public FObjectExport GetAsset()
         {
-            return ExportMap.Where(ex => (ex.ObjectFlags & FObjectExport.EObjectFlags.RF_Standalone) == FObjectExport.EObjectFlags.RF_Standalone).SingleOrDefault();
-            //return ExportMap.Where(ex => ex.bIsAsset).SingleOrDefault();
+            if(Version < (int)ObjectVersion.EUnrealEngineObjectUE4Version.VER_UE4_COOKED_ASSETS_IN_EDITOR_SUPPORT)
+                return ExportMap.Where(ex => ex.ObjectFlags.HasFlag(FObjectExport.EObjectFlags.RF_Standalone)).SingleOrDefault();
+            else
+                return ExportMap.Where(ex => ex.bIsAsset).SingleOrDefault();
         }
 
         public FObjectExport GetCode()
